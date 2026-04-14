@@ -1,0 +1,36 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="nico.codes">
+  <div id="hero" class="fixed inset-0 cursor-none">
+    <canvas id="field"></canvas>
+    <!-- <div class="pointer-events-none absolute inset-0 bg-[url('/grain.png')] opacity-[0.03] mix-blend-overlay"></div> -->
+
+    <div class="pointer-events-auto absolute bottom-12 left-12 right-12 flex items-baseline justify-between">
+      <h1 class="text-5xl font-bold tracking-tight sm:text-7xl select-none">nico.codes</h1>
+      <nav class="flex gap-10">
+        <a
+          href="/about"
+          class="text-3xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
+        >
+          About
+        </a>
+        <a
+          href="/blog"
+          class="text-3xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
+        >
+          Blog
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <script>
+    import { init } from "../components/FlowField";
+
+    const canvas = document.getElementById("field") as HTMLCanvasElement;
+    const container = document.getElementById("hero") as HTMLDivElement;
+    init(canvas, container);
+  </script>
+</Base>

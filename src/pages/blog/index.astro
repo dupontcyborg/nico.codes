@@ -1,0 +1,59 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const pinned = posts.filter((p) => p.data.pinned);
+const recent = posts.filter((p) => !p.data.pinned);
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+---
+
+<Base title="Blog — nico.codes">
+  <main class="mx-auto max-w-2xl px-6 py-16">
+    <a href="/" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; Home</a>
+    <h1 class="mt-8 text-3xl font-bold tracking-tight">Blog</h1>
+
+    {pinned.length > 0 && (
+      <section class="mt-10">
+        <h2 class="text-xs font-medium uppercase tracking-widest text-white/30">Pinned</h2>
+        <ul class="mt-4 space-y-4">
+          {pinned.map((post) => (
+            <li>
+              <a href={`/blog/${post.id}`} class="group block">
+                <span class="text-white/80 group-hover:text-white transition-colors">{post.data.title}</span>
+                <span class="ml-2 text-xs text-white/30">{formatDate(post.data.pubDate)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="mt-10">
+      {recent.length > 0 ? (
+        <ul class="space-y-4">
+          {recent.map((post) => (
+            <li>
+              <a href={`/blog/${post.id}`} class="group block">
+                <span class="text-white/80 group-hover:text-white transition-colors">{post.data.title}</span>
+                <span class="ml-2 text-xs text-white/30">{formatDate(post.data.pubDate)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="text-white/40">No posts yet.</p>
+      )}
+    </section>
+  </main>
+</Base>

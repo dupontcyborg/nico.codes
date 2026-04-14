@@ -1,0 +1,43 @@
+---
+import Base from "./Base.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  ogImage?: string;
+}
+
+const { title, description, pubDate, updatedDate, ogImage } = Astro.props;
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+---
+
+<Base title={`${title} — nico.codes`} description={description} ogImage={ogImage}>
+  <main class="mx-auto max-w-2xl px-6 py-16">
+    <a href="/blog" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; Back</a>
+    <article class="mt-8">
+      <header class="mb-10">
+        <h1 class="text-3xl font-bold tracking-tight">{title}</h1>
+        <time class="mt-2 block text-sm text-white/40" datetime={pubDate.toISOString()}>
+          {formatDate(pubDate)}
+        </time>
+        {updatedDate && (
+          <time class="mt-1 block text-sm text-white/30" datetime={updatedDate.toISOString()}>
+            Updated {formatDate(updatedDate)}
+          </time>
+        )}
+      </header>
+      <div class="prose prose-invert prose-sm max-w-none">
+        <slot />
+      </div>
+    </article>
+  </main>
+</Base>
