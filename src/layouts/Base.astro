@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
   title: string;
@@ -32,6 +33,7 @@ const {
       title="nico.codes"
       href="/rss.xml"
     />
+    <ClientRouter />
   </head>
   <body class="bg-[rgb(5,6,7)] text-[rgb(245,247,250)] antialiased">
     <slot />
