@@ -1,5 +1,6 @@
 ---
 import Base from "./Base.astro";
+import Header from "../components/Header.astro";
 
 interface Props {
   title: string;
@@ -21,8 +22,9 @@ function formatDate(date: Date) {
 ---
 
 <Base title={`${title} — nico.codes`} description={description} ogImage={ogImage}>
-  <main class="mx-auto max-w-2xl px-6 py-16">
-    <a href="/blog" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; Back</a>
+  <Header />
+  <main class="mx-auto max-w-2xl px-6 pt-8 pb-16">
+    <a href="/blog" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; All posts</a>
     <article class="mt-8">
       <header class="mb-10">
         <h1 class="text-3xl font-bold tracking-tight">{title}</h1>

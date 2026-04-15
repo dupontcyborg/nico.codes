@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import Header from "../../components/Header.astro";
 import { getCollection } from "astro:content";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
@@ -19,9 +20,9 @@ function formatDate(date: Date) {
 ---
 
 <Base title="Blog — nico.codes">
-  <main class="mx-auto max-w-2xl px-6 py-16">
-    <a href="/" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; Home</a>
-    <h1 class="mt-8 text-3xl font-bold tracking-tight">Blog</h1>
+  <Header />
+  <main class="mx-auto max-w-2xl px-6 pt-8 pb-16">
+    <h1 class="text-3xl font-bold tracking-tight">Blog</h1>
 
     {pinned.length > 0 && (
       <section class="mt-10">

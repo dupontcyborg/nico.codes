@@ -234,13 +234,17 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   let energy = 0;
   let seeds: Seed[] = [];
 
-  // Click to place seeds
+  // Click to place seeds — invert the margin transform so seeds render at the cursor
   function onClick(event: MouseEvent) {
     const rect = container.getBoundingClientRect();
-    const nx = (event.clientX - rect.left) / rect.width;
-    const ny = (event.clientY - rect.top) / rect.height;
-    const x = nx * 2 - 1;
-    const y = ny * 2 - 1;
+    const px = event.clientX - rect.left;
+    const py = event.clientY - rect.top;
+    const marginX = rect.width * 0.07;
+    const marginY = rect.height * 0.08;
+    const usableWidth = rect.width - marginX * 2;
+    const usableHeight = rect.height - marginY * 2;
+    const x = ((px - marginX) / usableWidth) * 2 - 1;
+    const y = ((py - marginY) / usableHeight) * 2 - 1;
     seeds = [{ x, y, strength: 3.35, decay: 1, pulse: 1 }, ...seeds].slice(
       0,
       6,
@@ -366,6 +370,13 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(pointer.x, pointer.y, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Visible cursor dot
+      const dotRadius = pointer.down ? 3 : 4;
+      ctx.beginPath();
+      ctx.arc(pointer.x, pointer.y, dotRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(245, 247, 250, 0.95)";
       ctx.fill();
     }
   }
