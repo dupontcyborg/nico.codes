@@ -1,13 +1,78 @@
 ---
 import Base from "../layouts/Base.astro";
+
+const projects = [
+  {
+    name: "numpy-ts",
+    href: "https://numpyts.dev",
+    logo: "/logos/numpy-ts.svg",
+    description: "Fast, Complete NumPy for TypeScript & JavaScript",
+  },
+  {
+    name: "CyborgDB",
+    href: "https://docs.cyborg.co",
+    logo: "/logos/cyborgdb.svg",
+    description: "Application-Layer Security for AI Knowledge & Memory",
+  },
+  {
+    name: "Stealth",
+    href: "https://cyborg.co/stealth",
+    logo: "/logos/stealth.svg",
+    description: "End-to-End Encrypted, Searchable Cloud Storage",
+  },
+  {
+    name: "Overhead",
+    href: "https://overhead.cloud/",
+    logo: "/logos/overhead.svg",
+    description: "Augmented Reality Flight Spotter for iOS",
+  }
+];
 ---
 
 <Base title="About — nico.codes">
-  <main class="mx-auto max-w-2xl px-6 py-16">
+  <main class="mx-auto max-w-3xl px-6 py-16">
     <a href="/" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; Home</a>
-    <h1 class="mt-8 text-3xl font-bold tracking-tight">About</h1>
-    <div class="mt-6 space-y-4 text-white/70 leading-relaxed">
-      <p>Coming soon.</p>
+
+    <div class="mt-10 sm:flex sm:gap-12">
+      <img
+        src="/nico-atk-320.png"
+        alt="Nico Dupont"
+        class="w-40 shrink-0 self-start sm:w-52"
+        style="image-rendering: pixelated;"
+      />
+
+      <div class="mt-8 sm:mt-0">
+        <h1 class="text-3xl font-bold tracking-tight">Hi, I'm Nico Dupont.</h1>
+
+        <div class="mt-6 text-white/70 leading-relaxed">
+          <p>
+            I run <a href="https://cyborg.co" target="_blank" rel="noopener noreferrer" class="text-white hover:text-white/70 underline underline-offset-2 transition-colors">Cyborg</a> and occasionally <a href="/blog" class="text-white hover:text-white/70 underline underline-offset-2 transition-colors">write</a>.
+          </p>
+        </div>
+
+        <h2 class="mt-10 text-sm font-medium uppercase tracking-widest text-white/30">Select projects</h2>
+
+        <div class="mt-4 grid gap-3">
+          {projects.map((project) => (
+            <a
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex items-center gap-4 rounded-xl border border-white/10 px-4 py-3 transition-colors hover:border-white/25 hover:bg-white/[0.03]"
+            >
+              <img
+                src={project.logo}
+                alt={`${project.name} logo`}
+                class="h-8 w-8 shrink-0 grayscale transition-[filter] duration-300 group-hover:grayscale-0"
+              />
+              <div>
+                <span class="text-sm font-medium text-white">{project.name}</span>
+                <p class="text-xs text-white/40">{project.description}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   </main>
 </Base>
