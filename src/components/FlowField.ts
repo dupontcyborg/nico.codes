@@ -371,13 +371,6 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       ctx.beginPath();
       ctx.arc(pointer.x, pointer.y, r, 0, Math.PI * 2);
       ctx.fill();
-
-      // Visible cursor dot
-      const dotRadius = pointer.down ? 3 : 4;
-      ctx.beginPath();
-      ctx.arc(pointer.x, pointer.y, dotRadius, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(245, 247, 250, 0.95)";
-      ctx.fill();
     }
   }
 

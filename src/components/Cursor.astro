@@ -1,0 +1,108 @@
+---
+---
+
+<div id="cursor" aria-hidden="true" transition:persist>
+  <div id="cursor-ring"></div>
+  <div id="cursor-dot"></div>
+</div>
+
+<style is:global>
+  #cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+  #cursor.visible {
+    opacity: 1;
+  }
+  #cursor-dot,
+  #cursor-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 9999px;
+    will-change: transform, width, height;
+  }
+  #cursor-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(245, 247, 250, 0.95);
+  }
+  #cursor-ring {
+    width: 8px;
+    height: 8px;
+    border: 1px solid rgba(245, 247, 250, 0.5);
+    transition:
+      width 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      height 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 180ms;
+  }
+  #cursor.hover #cursor-ring {
+    width: 36px;
+    height: 36px;
+    border-color: rgba(245, 247, 250, 0.8);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #cursor-ring {
+      transition: none;
+    }
+  }
+  /* Only hide the system cursor when our custom one is active */
+  html[data-cursor="active"] body,
+  html[data-cursor="active"] body * {
+    cursor: none !important;
+  }
+  html[data-cursor="active"] input,
+  html[data-cursor="active"] textarea {
+    cursor: text !important;
+  }
+</style>
+
+<script>
+  // Module script — runs once. Cursor div has transition:persist so refs survive navigations.
+  if (window.matchMedia("(pointer: fine)").matches) {
+    const cursor = document.getElementById("cursor")!;
+    const dot = document.getElementById("cursor-dot")!;
+    const ring = document.getElementById("cursor-ring")!;
+
+    const activate = () =>
+      document.documentElement.setAttribute("data-cursor", "active");
+    activate();
+    document.addEventListener("astro:after-swap", activate);
+
+    const interactiveSelector =
+      'a, button, [role="button"], input[type="submit"], input[type="button"], label[for]';
+
+    function setPos(x: number, y: number) {
+      const t = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+      dot.style.transform = t;
+      ring.style.transform = t;
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      setPos(e.clientX, e.clientY);
+      cursor.classList.add("visible");
+    });
+
+    document.addEventListener("mouseleave", () => cursor.classList.remove("visible"));
+    document.addEventListener("mouseenter", () => cursor.classList.add("visible"));
+
+    document.addEventListener("mouseover", (e) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.(interactiveSelector)) {
+        cursor.classList.add("hover");
+      }
+    });
+
+    document.addEventListener("mouseout", (e) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.(interactiveSelector)) {
+        cursor.classList.remove("hover");
+      }
+    });
+  }
+</script>
