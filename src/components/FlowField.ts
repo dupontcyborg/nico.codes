@@ -1,5 +1,6 @@
 import {
   add,
+  configureWasm,
   cos,
   divide,
   exp,
@@ -11,8 +12,11 @@ import {
   sin,
   sqrt,
   subtract,
+  wasmFreeBytes,
   type NDArrayCore,
 } from "numpy-ts/core";
+
+configureWasm({ maxMemory: 32 * 1024 * 1024 });
 
 // --- Math utilities ---
 
@@ -24,14 +28,6 @@ function damp(current: number, target: number, easing: number) {
   return current + (target - current) * easing;
 }
 
-function createGrid(cols: number, rows: number) {
-  const x = linspace(-1, 1, cols);
-  const y = linspace(-1, 1, rows);
-  const X = outer(ones([rows]), x);
-  const Y = outer(y, ones([cols]));
-  return { X, Y };
-}
-
 // --- Seed state ---
 
 interface Seed {
@@ -40,6 +36,29 @@ interface Seed {
   strength: number;
   decay: number;
   pulse: number;
+}
+
+// --- Grid cache ---
+
+let _gridCols = 0;
+let _gridRows = 0;
+let _X: NDArrayCore;
+let _Y: NDArrayCore;
+
+function getGrid(cols: number, rows: number) {
+  if (cols !== _gridCols || rows !== _gridRows) {
+    _X?.dispose();
+    _Y?.dispose();
+    const x = linspace(-1, 1, cols);
+    const y = linspace(-1, 1, rows);
+    _X = outer(ones([rows]), x);
+    _Y = outer(y, ones([cols]));
+    x.dispose();
+    y.dispose();
+    _gridCols = cols;
+    _gridRows = rows;
+  }
+  return { X: _X, Y: _Y };
 }
 
 // --- Field computation ---
@@ -53,57 +72,86 @@ function buildField(
   pointerEnergy: number,
   seeds: Seed[],
 ) {
-  const { X, Y } = createGrid(cols, rows);
+  const { X, Y } = getGrid(cols, rows);
   const drift = time * 0.00008;
 
-  // Base sinusoidal flow
-  let u = add(
-    sin(add(multiply(Y, 2.2), drift * 7.5)),
-    multiply(cos(add(multiply(X, 3.4), drift * 4.8)), 0.62),
-  );
-  let v = add(
-    cos(subtract(multiply(X, 2.35), drift * 7.2)),
-    multiply(sin(add(multiply(Y, 2.55), drift * 3.7)), 0.5),
-  );
+  // u = sin(Y*2.2 + drift*7.5) + cos(X*3.4 + drift*4.8)*0.62
+  using t0 = multiply(Y, 2.2);
+  using t1 = add(t0, drift * 7.5);
+  using t2 = sin(t1);
+  using t3 = multiply(X, 3.4);
+  using t4 = add(t3, drift * 4.8);
+  using t5 = cos(t4);
+  using t6 = multiply(t5, 0.62);
+  let u = add(t2, t6);
+
+  // v = cos(X*2.35 - drift*7.2) + sin(Y*2.55 + drift*3.7)*0.5
+  using t7 = multiply(X, 2.35);
+  using t8 = subtract(t7, drift * 7.2);
+  using t9 = cos(t8);
+  using t10 = multiply(Y, 2.55);
+  using t11 = add(t10, drift * 3.7);
+  using t12 = sin(t11);
+  using t13 = multiply(t12, 0.5);
+  let v = add(t9, t13);
 
   // Pointer influence
-  const dx = subtract(X, pointerX);
-  const dy = subtract(Y, pointerY);
-  const distanceSq = add(multiply(dx, dx), multiply(dy, dy));
-  const envelope = exp(divide(distanceSq, -(0.055 + pointerEnergy * 0.085)));
-  const swirl = multiply(envelope, 1.4 + pointerEnergy * 2.6);
+  {
+    using dx = subtract(X, pointerX);
+    using dy = subtract(Y, pointerY);
+    using dxSq = multiply(dx, dx);
+    using dySq = multiply(dy, dy);
+    using distSq = add(dxSq, dySq);
+    using scaled = divide(distSq, -(0.055 + pointerEnergy * 0.085));
+    using envelope = exp(scaled);
+    using swirl = multiply(envelope, 1.4 + pointerEnergy * 2.6);
 
-  u = add(u, multiply(multiply(dy, -1), swirl));
-  v = add(v, multiply(dx, swirl));
+    using negDy = multiply(dy, -1);
+    using swirlDy = multiply(negDy, swirl);
+    { using old = u; u = add(old, swirlDy); }
+
+    using swirlDx = multiply(dx, swirl);
+    { using old = v; v = add(old, swirlDx); }
+  }
 
   // Seed influences
   for (const seed of seeds) {
-    const localDx = subtract(X, seed.x);
-    const localDy = subtract(Y, seed.y);
-    const localDistance = add(
-      multiply(localDx, localDx),
-      multiply(localDy, localDy),
-    );
+    using localDx = subtract(X, seed.x);
+    using localDy = subtract(Y, seed.y);
+    using dxSq = multiply(localDx, localDx);
+    using dySq = multiply(localDy, localDy);
+    using localDist = add(dxSq, dySq);
     const envelopeScale = 0.03 + seed.decay * 0.075;
-    const localEnvelope = exp(divide(localDistance, -envelopeScale));
+    using scaledDist = divide(localDist, -envelopeScale);
+    using localEnvelope = exp(scaledDist);
     const strength = seed.strength * seed.decay;
-    const localPush = multiply(localEnvelope, strength);
-    const localSwirl = multiply(localEnvelope, strength * 0.24);
+    using localPush = multiply(localEnvelope, strength);
+    using localSwirl = multiply(localEnvelope, strength * 0.24);
 
-    u = add(u, multiply(localDx, localPush));
-    v = add(v, multiply(localDy, localPush));
-    u = add(u, multiply(multiply(localDy, -1), localSwirl));
-    v = add(v, multiply(localDx, localSwirl));
+    using pushDx = multiply(localDx, localPush);
+    { using old = u; u = add(old, pushDx); }
+
+    using pushDy = multiply(localDy, localPush);
+    { using old = v; v = add(old, pushDy); }
+
+    using negDy = multiply(localDy, -1);
+    using swirlDy = multiply(negDy, localSwirl);
+    { using old = u; u = add(old, swirlDy); }
+
+    using swirlDx = multiply(localDx, localSwirl);
+    { using old = v; v = add(old, swirlDx); }
   }
 
-  const magnitude = sqrt(add(add(multiply(u, u), multiply(v, v)), 1e-6));
-  return {
-    X,
-    Y,
-    u: divide(u, magnitude),
-    v: divide(v, magnitude),
-    magnitude,
-  };
+  // Normalization
+  using uSq = multiply(u, u);
+  using vSq = multiply(v, v);
+  using sumSq = add(uSq, vSq);
+  using sumEps = add(sumSq, 1e-6);
+  const magnitude = sqrt(sumEps);
+  { using old = u; u = divide(old, magnitude); }
+  { using old = v; v = divide(old, magnitude); }
+
+  return { X, Y, u, v, magnitude };
 }
 
 // --- Pointer tracking ---
@@ -234,6 +282,9 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   let energy = 0;
   let seeds: Seed[] = [];
 
+  // Previous frame's field results (disposed each frame)
+  let prevField: { u: NDArrayCore; v: NDArrayCore; magnitude: NDArrayCore } | null = null;
+
   // Click to place seeds — invert the margin transform so seeds render at the cursor
   function onClick(event: MouseEvent) {
     const rect = container.getBoundingClientRect();
@@ -255,9 +306,25 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
 
   const ctx = canvas.getContext("2d")!;
   let frameId = 0;
+  let frameCount = 0;
+  let lastLogTime = 0;
 
   function frame(time: number) {
     frameId = requestAnimationFrame(frame);
+
+    // Log WASM heap free bytes every second
+    frameCount++;
+    if (time - lastLogTime > 1000) {
+      const free = (wasmFreeBytes as () => number)();
+      const total = 32 * 1024 * 1024;
+      const used = total - free;
+      console.log(
+        `[wasm] ${(used / 1024).toFixed(0)}KB used / ${(total / 1024).toFixed(0)}KB total ` +
+        `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`
+      );
+      frameCount = 0;
+      lastLogTime = time;
+    }
 
     const { width, height, dpr } = metrics;
     if (width === 0 || height === 0) return;
@@ -276,6 +343,14 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       .map((s) => ({ ...s, decay: s.decay * 0.993, pulse: s.pulse * 0.72 }))
       .filter((s) => s.decay > 0.08);
 
+    // Dispose previous frame's output arrays
+    if (prevField) {
+      prevField.u.dispose();
+      prevField.v.dispose();
+      prevField.magnitude.dispose();
+      prevField = null;
+    }
+
     // Compute field
     const cols = clamp(Math.floor(width / FIELD_SPACING), 24, 56);
     const rows = clamp(Math.floor(height / FIELD_SPACING), 18, 36);
@@ -289,6 +364,9 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     const vData = field.v.data as Float64Array;
     const magnitudeData = field.magnitude.data as Float64Array;
     const magnitudeMax = Math.max(1e-6, Number(max(field.magnitude)));
+
+    // Stash for disposal next frame
+    prevField = { u: field.u, v: field.v, magnitude: field.magnitude };
 
     // Draw
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -381,5 +459,10 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     container.removeEventListener("click", onClick);
     destroyPointer();
     destroyCanvas();
+    if (prevField) {
+      prevField.u.dispose();
+      prevField.v.dispose();
+      prevField.magnitude.dispose();
+    }
   };
 }

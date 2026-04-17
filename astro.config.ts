@@ -6,5 +6,16 @@ export default defineConfig({
   integrations: [mdx()],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      hmr: {
+        protocol: "ws",
+      },
+    },
+    build: {
+      target: "es2022",
+    },
+    esbuild: {
+      target: "es2022",
+    },
   },
 });
