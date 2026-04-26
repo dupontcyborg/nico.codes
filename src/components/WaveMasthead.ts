@@ -142,21 +142,42 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
 
   frameId = requestAnimationFrame(frame);
 
-  function onVis() {
-    if (document.hidden) {
-      running = false;
-      cancelAnimationFrame(frameId);
-    } else if (!running) {
+  // Pause when not visible (tab hidden or scrolled out of viewport)
+  let visible = true;
+  let tabVisible = true;
+
+  function updateRunning() {
+    const shouldRun = visible && tabVisible;
+    if (shouldRun && !running) {
       running = true;
       frameId = requestAnimationFrame(frame);
+    } else if (!shouldRun && running) {
+      running = false;
+      cancelAnimationFrame(frameId);
     }
   }
+
+  function onVis() {
+    tabVisible = !document.hidden;
+    updateRunning();
+  }
   document.addEventListener("visibilitychange", onVis);
+
+  // 200px safety margin so animation resumes before scrolling into view
+  const io = new IntersectionObserver(
+    ([entry]) => {
+      visible = entry.isIntersecting;
+      updateRunning();
+    },
+    { rootMargin: "200px 0px" },
+  );
+  io.observe(container);
 
   return function destroy() {
     running = false;
     cancelAnimationFrame(frameId);
     ro.disconnect();
+    io.disconnect();
     document.removeEventListener("visibilitychange", onVis);
     xArr?.dispose();
     xArr = null;
