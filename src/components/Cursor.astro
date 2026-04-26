@@ -17,9 +17,12 @@
 
     function activate() {
       document.documentElement.setAttribute("data-cursor", "active");
-      // Restore visibility after View Transition swap (mouseleave fires during swap)
+      const cursor = document.getElementById("cursor");
+      // Clear hover state — mouseout doesn't fire during View Transition swaps
+      cursor?.classList.remove("hover");
+      // Restore visibility after swap (mouseleave fires during swap)
       if (hasMoved) {
-        document.getElementById("cursor")?.classList.add("visible");
+        cursor?.classList.add("visible");
       }
     }
 

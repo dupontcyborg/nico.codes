@@ -4,15 +4,26 @@
 <div class="relative h-[110px] shrink-0">
   <canvas id="masthead-canvas" class="absolute inset-0 w-full h-full block"></canvas>
   <header class="absolute inset-0 px-8 flex items-center justify-between pointer-events-none">
-    <a href="/" class="pointer-events-auto font-bold text-[32px] tracking-tight text-white hover:text-white/70 transition-colors" style="letter-spacing: -0.02em;">
+    <a href="/" class="pointer-events-auto relative z-10 font-bold text-[32px] tracking-tight text-white hover:text-white/70 transition-colors header-blur" style="letter-spacing: -0.02em;">
       nico.codes
     </a>
-    <nav id="header-nav" class="pointer-events-auto flex gap-7 text-[22px] font-medium">
+    <nav id="header-nav" class="pointer-events-auto relative z-10 flex gap-7 text-[22px] font-medium header-blur">
       <a href="/notes" data-nav-link="/notes" class="transition-colors">Notes</a>
       <a href="/about" data-nav-link="/about" class="transition-colors">About</a>
     </nav>
   </header>
 </div>
+
+<style>
+  .header-blur::before {
+    content: "";
+    position: absolute;
+    inset: -2rem -3rem;
+    background: radial-gradient(ellipse at center, rgba(5,6,7,0.95) 0%, rgba(5,6,7,0.6) 40%, rgba(5,6,7,0) 70%);
+    z-index: -1;
+    pointer-events: none;
+  }
+</style>
 
 <script>
   import { init } from "./WaveMasthead";

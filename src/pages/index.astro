@@ -8,9 +8,9 @@ import Base from "../layouts/Base.astro";
       <canvas id="field"></canvas>
     </div>
 
-    <h1 id="hero-title" class="pointer-events-none absolute select-none font-bold tracking-tight">nico.codes</h1>
+    <h1 id="hero-title" class="pointer-events-none absolute select-none font-bold tracking-tight z-10">nico.codes</h1>
 
-    <nav id="hero-nav" class="pointer-events-auto absolute flex">
+    <nav id="hero-nav" class="pointer-events-auto absolute flex z-10">
       <a
         href="/notes"
         class="font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none"
@@ -44,6 +44,17 @@ import Base from "../layouts/Base.astro";
     #field-wrap {
       top: 3rem;
       bottom: 3rem;
+    }
+
+    /* Soft blur glow behind text */
+    #hero-title::before,
+    #hero-nav::before {
+      content: "";
+      position: absolute;
+      inset: -3rem -4rem;
+      background: radial-gradient(ellipse at center, rgba(5,6,7,0.95) 0%, rgba(5,6,7,0.6) 40%, rgba(5,6,7,0) 70%);
+      z-index: -1;
+      pointer-events: none;
     }
 
     /* Desktop: full-screen overlay */
