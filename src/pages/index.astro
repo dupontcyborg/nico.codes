@@ -5,22 +5,21 @@ import Base from "../layouts/Base.astro";
 <Base title="nico.codes">
   <div id="hero" class="fixed inset-0">
     <canvas id="field"></canvas>
-    <!-- <div class="pointer-events-none absolute inset-0 bg-[url('/grain.png')] opacity-[0.03] mix-blend-overlay"></div> -->
 
     <h1 class="pointer-events-none absolute top-10 left-8 text-4xl font-bold tracking-tight select-none sm:bottom-12 sm:top-auto sm:left-12 sm:text-7xl">nico.codes</h1>
 
     <nav class="pointer-events-auto absolute bottom-10 right-8 flex gap-8 sm:bottom-12 sm:right-12 sm:gap-10">
       <a
+        href="/blog"
+        class="text-4xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
+      >
+        Writing
+      </a>
+      <a
         href="/about"
         class="text-4xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
       >
         About
-      </a>
-      <a
-        href="/blog"
-        class="text-4xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
-      >
-        Blog
       </a>
     </nav>
   </div>

@@ -5,51 +5,57 @@ import Header from "../components/Header.astro";
 const projects = [
   {
     name: "numpy-ts",
-    href: "https://numpyts.dev",
+    desc: "Fast, complete NumPy for TypeScript & JavaScript.",
+    url: "numpyts.dev",
     logo: "/logos/numpy-ts.svg",
-    description: "Fast, Complete NumPy for TypeScript & JavaScript",
+    year: "2025",
   },
   {
     name: "CyborgDB",
-    href: "https://docs.cyborg.co",
+    desc: "Application-layer security for AI knowledge & memory.",
+    url: "docs.cyborg.co",
     logo: "/logos/cyborgdb.svg",
-    description: "Application-Layer Security for AI Knowledge & Memory",
+    year: "2024",
   },
   {
     name: "Stealth",
-    href: "https://cyborg.co/stealth",
+    desc: "End-to-end encrypted, searchable cloud storage.",
+    url: "cyborg.co/stealth",
     logo: "/logos/stealth.svg",
-    description: "End-to-End Encrypted, Searchable Cloud Storage",
+    year: "2023",
   },
   {
     name: "Overhead",
-    href: "https://overhead.cloud/",
+    desc: "Augmented reality flight spotter for iOS.",
+    url: "overhead.cloud",
     logo: "/logos/overhead.svg",
-    description: "Augmented Reality Flight Spotter for iOS",
-  }
+    year: "2026",
+  },
 ];
 ---
 
 <Base title="About — nico.codes">
   <Header />
-  <main class="mx-auto max-w-3xl px-6 pt-8 pb-16">
-    <div class="sm:flex sm:gap-12">
-      <div class="shrink-0 self-start">
-        <div class="group relative w-40 aspect-square overflow-hidden rounded-2xl sm:w-52">
+  <main class="mx-auto max-w-[780px] px-8 pt-14 pb-16">
+    <div class="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-9 items-start">
+      <div>
+        <div class="group relative w-[200px] h-[260px] overflow-hidden rounded-xl">
           <img
-            src="/portraits/cap-composite.webp"
-            alt=""
-            aria-hidden="true"
-            class="absolute inset-0 h-full w-full"
-          />
-          <img
-            src="/portraits/cap-color.webp"
+            src="/portraits/glasses-color.webp"
             alt="Nico Dupont"
-            class="absolute inset-0 h-full w-full opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            class="absolute inset-0 h-full w-full object-cover"
           />
         </div>
+      </div>
 
-        <div class="mt-4 flex w-40 items-center gap-4 sm:w-52">
+      <div>
+        <h1 class="text-[26px] font-semibold tracking-tight leading-tight m-0 mb-2.5" style="letter-spacing: -0.02em;">
+          Hi, I'm Nico Dupont.
+        </h1>
+        <p class="mt-[18px] text-[16px] leading-[1.75] text-white/70">
+          I'm a software engineer from Paris, based in New York. I run <a href="https://cyborg.co" target="_blank" rel="noopener noreferrer" class="text-white hover:text-white/70 underline underline-offset-2 decoration-white/25 hover:decoration-white/50 transition-colors">Cyborg</a> and spend most of my time building things (some ship, most don't). I really enjoy working on performance optimization, applied cryptography and complex problems. Also, I <a href="/blog" class="text-white hover:text-white/70 underline underline-offset-2 decoration-white/25 hover:decoration-white/50 transition-colors">write</a> sometimes.
+        </p>
+        <div class="mt-4 flex items-center gap-4">
           <a
             href="https://github.com/dupontcyborg"
             target="_blank"
@@ -70,39 +76,30 @@ const projects = [
           </a>
         </div>
       </div>
+    </div>
 
-      <div class="mt-8 sm:mt-0">
-        <h1 class="text-3xl font-bold tracking-tight">Hi, I'm Nico Dupont.</h1>
-
-        <div class="mt-6 text-white/70 leading-relaxed space-y-4">
-          <p>
-            I'm a software engineer from Paris, based in New York. I run <a href="https://cyborg.co" target="_blank" rel="noopener noreferrer" class="text-white hover:text-white/70 underline underline-offset-2 transition-colors">Cyborg</a> and spend most of my spare time building things — some ship, some don't. I also <a href="/blog" class="text-white hover:text-white/70 underline underline-offset-2 transition-colors">write</a> when something's worth saying.
-          </p>
-        </div>
-
-        <h2 class="mt-10 text-sm font-medium uppercase tracking-widest text-white/30">Select projects</h2>
-
-        <div class="mt-4 grid gap-3">
-          {projects.map((project) => (
+    <section class="mt-14">
+      <h2 class="text-[13px] font-medium text-white/30 m-0 mb-5 tracking-wider uppercase">
+        Some of my projects
+      </h2>
+      <ul class="list-none p-0 m-0">
+        {projects.map((p, i) => (
+          <li>
+            {i > 0 && <div class="h-px bg-white/[0.08] mx-2"></div>}
             <a
-              href={project.href}
+              href={`https://${p.url}`}
               target="_blank"
               rel="noopener noreferrer"
-              class="group flex items-center gap-4 rounded-xl border border-white/10 px-4 py-3 transition-colors hover:border-white/25 hover:bg-white/[0.03]"
+              class="group grid grid-cols-[24px_120px_1fr_60px] gap-4 items-center py-4 px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
             >
-              <img
-                src={project.logo}
-                alt={`${project.name} logo`}
-                class="h-8 w-8 shrink-0"
-              />
-              <div>
-                <span class="text-sm font-medium text-white">{project.name}</span>
-                <p class="text-xs text-white/40">{project.description}</p>
-              </div>
+              <img src={p.logo} alt="" class="h-5 w-5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+              <span class="text-[15px] text-white/80 font-medium group-hover:text-white transition-colors">{p.name}</span>
+              <span class="text-sm text-white/40 leading-relaxed group-hover:text-white/60 transition-colors">{p.desc}</span>
+              <span class="text-xs text-white/30 font-mono text-right">{p.year}</span>
             </a>
-          ))}
-        </div>
-      </div>
-    </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   </main>
 </Base>
