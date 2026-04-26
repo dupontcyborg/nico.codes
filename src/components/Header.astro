@@ -1,33 +1,46 @@
 ---
-const path = Astro.url.pathname;
-function isActive(href: string) {
-  if (href === "/") return path === "/";
-  return path === href || path.startsWith(href + "/");
-}
 ---
 
-<header class="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
-  <a href="/" class="text-sm font-medium tracking-tight text-white hover:text-white/70 transition-colors">
-    nico.codes
-  </a>
-  <nav class="flex gap-6">
-    <a
-      href="/about"
-      class:list={[
-        "text-sm tracking-wide transition-colors",
-        isActive("/about") ? "text-white" : "text-white/40 hover:text-white/70",
-      ]}
-    >
-      About
+<div class="relative h-[110px] shrink-0">
+  <canvas id="masthead-canvas" class="absolute inset-0 w-full h-full block"></canvas>
+  <header class="absolute inset-0 px-8 flex items-center justify-between pointer-events-none">
+    <a href="/" class="pointer-events-auto font-bold text-[32px] tracking-tight text-white hover:text-white/70 transition-colors" style="letter-spacing: -0.02em;">
+      nico.codes
     </a>
-    <a
-      href="/blog"
-      class:list={[
-        "text-sm tracking-wide transition-colors",
-        isActive("/blog") ? "text-white" : "text-white/40 hover:text-white/70",
-      ]}
-    >
-      Blog
-    </a>
-  </nav>
-</header>
+    <nav id="header-nav" class="pointer-events-auto flex gap-7 text-[22px] font-medium">
+      <a href="/blog" data-nav-link="/blog" class="transition-colors">Writing</a>
+      <a href="/about" data-nav-link="/about" class="transition-colors">About</a>
+    </nav>
+  </header>
+</div>
+
+<script>
+  import { init } from "./WaveMasthead";
+
+  let destroy: (() => void) | null = null;
+
+  function start() {
+    destroy?.();
+    destroy = null;
+    const canvas = document.getElementById("masthead-canvas") as HTMLCanvasElement | null;
+    const container = canvas?.parentElement as HTMLElement | null;
+    if (canvas && container) {
+      destroy = init(canvas, container);
+    }
+    updateActiveLinks();
+  }
+
+  function updateActiveLinks() {
+    const path = window.location.pathname;
+    document.querySelectorAll<HTMLAnchorElement>("[data-nav-link]").forEach((a) => {
+      const href = a.dataset.navLink!;
+      const active = path === href || path.startsWith(href + "/");
+      a.className = active
+        ? "transition-colors text-white"
+        : "transition-colors text-white/75 hover:text-white";
+    });
+  }
+
+  start();
+  document.addEventListener("astro:after-swap", start);
+</script>
