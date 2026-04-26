@@ -7,9 +7,6 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
-const pinned = posts.filter((p) => p.data.pinned);
-const recent = posts.filter((p) => !p.data.pinned);
-
 function formatDate(date: Date) {
   return date.toLocaleDateString("en-US", {
     year: "numeric",
@@ -19,42 +16,29 @@ function formatDate(date: Date) {
 }
 ---
 
-<Base title="Blog — nico.codes">
+<Base title="Writing — nico.codes">
   <Header />
-  <main class="mx-auto max-w-2xl px-6 pt-8 pb-16">
-    <h1 class="text-3xl font-bold tracking-tight">Blog</h1>
-
-    {pinned.length > 0 && (
-      <section class="mt-10">
-        <h2 class="text-xs font-medium uppercase tracking-widest text-white/30">Pinned</h2>
-        <ul class="mt-4 space-y-4">
-          {pinned.map((post) => (
-            <li>
-              <a href={`/blog/${post.id}`} class="group block">
-                <span class="text-white/80 group-hover:text-white transition-colors">{post.data.title}</span>
-                <span class="ml-2 text-xs text-white/30">{formatDate(post.data.pubDate)}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
+  <main class="mx-auto max-w-[720px] px-8 pt-14 pb-16">
+    {posts.length > 0 ? (
+      <ul class="list-none p-0 m-0">
+        {posts.map((post, i) => (
+          <li>
+            {i > 0 && <div class="h-px bg-white/[0.08] mx-2"></div>}
+            <a
+              href={`/blog/${post.id}`}
+              class="group grid grid-cols-[1fr_100px] gap-6 items-baseline py-[18px] px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
+            >
+              <div>
+                <div class="text-[17px] font-medium text-white/80 tracking-tight group-hover:text-white transition-colors">{post.data.title}</div>
+                <div class="text-sm text-white/40 mt-1 leading-relaxed group-hover:text-white/60 transition-colors">{post.data.description}</div>
+              </div>
+              <span class="text-white/30 text-xs font-mono text-right">{formatDate(post.data.pubDate)}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-white/40">No posts yet.</p>
     )}
-
-    <section class="mt-10">
-      {recent.length > 0 ? (
-        <ul class="space-y-4">
-          {recent.map((post) => (
-            <li>
-              <a href={`/blog/${post.id}`} class="group block">
-                <span class="text-white/80 group-hover:text-white transition-colors">{post.data.title}</span>
-                <span class="ml-2 text-xs text-white/30">{formatDate(post.data.pubDate)}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p class="text-white/40">No posts yet.</p>
-      )}
-    </section>
   </main>
 </Base>

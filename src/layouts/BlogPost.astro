@@ -15,6 +15,14 @@ const { title, description, pubDate, updatedDate, ogImage } = Astro.props;
 function formatDate(date: Date) {
   return date.toLocaleDateString("en-US", {
     year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatDateLong(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
     month: "long",
     day: "numeric",
   });
@@ -23,23 +31,93 @@ function formatDate(date: Date) {
 
 <Base title={`${title} — nico.codes`} description={description} ogImage={ogImage}>
   <Header />
-  <main class="mx-auto max-w-2xl px-6 pt-8 pb-16">
-    <a href="/blog" class="text-sm text-white/40 hover:text-white/70 transition-colors">&larr; All posts</a>
-    <article class="mt-8">
-      <header class="mb-10">
-        <h1 class="text-3xl font-bold tracking-tight">{title}</h1>
-        <time class="mt-2 block text-sm text-white/40" datetime={pubDate.toISOString()}>
-          {formatDate(pubDate)}
-        </time>
-        {updatedDate && (
-          <time class="mt-1 block text-sm text-white/30" datetime={updatedDate.toISOString()}>
-            Updated {formatDate(updatedDate)}
-          </time>
-        )}
-      </header>
-      <div class="prose prose-invert prose-sm max-w-none">
+  <main class="mx-auto max-w-[880px] px-8 pt-14 pb-16 grid grid-cols-1 md:grid-cols-[1fr_160px] gap-12">
+    <article>
+      <div class="text-xs text-white/30 font-mono">
+        {formatDate(pubDate)}
+      </div>
+      <h1 class="text-[32px] font-semibold tracking-tight leading-tight mt-2.5 mb-3.5" style="letter-spacing: -0.02em;">
+        {title}
+      </h1>
+      <p class="text-[15px] text-white/55 leading-relaxed m-0">
+        {description}
+      </p>
+
+      {updatedDate && (
+        <div class="text-xs text-white/25 mt-2">
+          Updated {formatDateLong(updatedDate)}
+        </div>
+      )}
+
+      <div class="h-px bg-white/[0.08] my-7"></div>
+
+      <div class="prose prose-invert prose-sm max-w-none post-body">
         <slot />
       </div>
     </article>
+
+    <aside id="post-outline" class="hidden md:block font-mono text-[11px] text-white/55 leading-relaxed">
+      <div class="sticky top-6">
+        <div class="text-white/30 mb-3 text-[11px] tracking-wider uppercase">Contents</div>
+        <nav id="outline-nav"></nav>
+      </div>
+    </aside>
   </main>
+
+  <script>
+    function initOutline() {
+      const nav = document.getElementById("outline-nav");
+      const article = document.querySelector(".post-body");
+      if (!nav || !article) return;
+
+      const headings = article.querySelectorAll("h2, h3");
+      if (headings.length === 0) {
+        document.getElementById("post-outline")?.classList.add("md:hidden");
+        return;
+      }
+
+      nav.innerHTML = "";
+      const ids: string[] = [];
+
+      headings.forEach((h, i) => {
+        if (!h.id) {
+          h.id = `sec-${i}`;
+        }
+        ids.push(h.id);
+
+        const link = document.createElement("a");
+        link.href = `#${h.id}`;
+        link.textContent = h.textContent || "";
+        link.className = "block py-0.5 pl-2 border-l-2 border-white/[0.08] text-white/55 no-underline transition-colors duration-200 hover:text-white/80";
+        link.style.cursor = "pointer";
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const el = document.getElementById(h.id);
+          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        nav.appendChild(link);
+      });
+
+      function updateActive() {
+        let activeId = ids[0];
+        for (const id of ids) {
+          const el = document.getElementById(id);
+          if (!el) continue;
+          const top = el.getBoundingClientRect().top;
+          if (top <= 80) activeId = id;
+        }
+        nav.querySelectorAll("a").forEach((a) => {
+          const isActive = a.getAttribute("href") === `#${activeId}`;
+          a.style.borderLeftColor = isActive ? "rgba(220,160,120,0.85)" : "rgba(245,247,250,0.08)";
+          a.style.color = isActive ? "rgb(245,247,250)" : "";
+        });
+      }
+
+      updateActive();
+      window.addEventListener("scroll", updateActive, { passive: true });
+    }
+
+    initOutline();
+    document.addEventListener("astro:after-swap", initOutline);
+  </script>
 </Base>
