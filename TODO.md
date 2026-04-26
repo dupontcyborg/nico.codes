@@ -2,27 +2,28 @@ HOME
 
 - [X] Desktop
 - [X] Mobile
-- [ ] Polish animation
+- [X] Polish animation
 - [ ] Remove wasmFreeBytes print statements
 
 ABOUT
 
-- [ ] Desktop
-- [ ] Mobile
-- [ ] Decide on animations/transitions
+- [X] Desktop
+- [X] Mobile
 - [ ] Polish
-    - Also could add "tags" for each project (C++, CUDA, TypeScript, Zig, Swift)
 
 BLOG
 
-- [ ] Desktop
-- [ ] Mobile
-- [ ] Decide on animations/transitions
+- [X] Desktop
+- [X] Mobile
 - [ ] Polish
 
 BLOG PAGE
 
-- [ ] Desktop
-- [ ] Mobile
-- [ ] Decide on animations/transitions
+- [X] Desktop
+- [X] Mobile
 - [ ] Polish
+
+GENERAL
+
+- [ ] OG generator
+- [ ] Favicon

@@ -4,25 +4,70 @@ import Base from "../layouts/Base.astro";
 
 <Base title="nico.codes">
   <div id="hero" class="fixed inset-0">
-    <canvas id="field"></canvas>
+    <div id="field-wrap" class="absolute inset-0">
+      <canvas id="field"></canvas>
+    </div>
 
-    <h1 class="pointer-events-none absolute top-10 left-8 text-4xl font-bold tracking-tight select-none sm:bottom-12 sm:top-auto sm:left-12 sm:text-7xl">nico.codes</h1>
+    <h1 id="hero-title" class="pointer-events-none absolute select-none font-bold tracking-tight">nico.codes</h1>
 
-    <nav class="pointer-events-auto absolute bottom-10 right-8 flex gap-8 sm:bottom-12 sm:right-12 sm:gap-10">
+    <nav id="hero-nav" class="pointer-events-auto absolute flex">
       <a
         href="/blog"
-        class="text-4xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
+        class="font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none"
       >
-        Writing
+        Blog
       </a>
       <a
         href="/about"
-        class="text-4xl font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none sm:text-5xl"
+        class="font-bold tracking-tight text-white/40 hover:text-white transition-colors select-none"
       >
         About
       </a>
     </nav>
   </div>
+
+  <style>
+    /* Mobile: text outside field */
+    #hero-title {
+      top: 1rem;
+      left: 2rem;
+      font-size: 2.25rem; /* text-4xl */
+    }
+    #hero-nav {
+      bottom: 1rem;
+      right: 2rem;
+      gap: 2rem;
+    }
+    #hero-nav a {
+      font-size: 2.25rem; /* text-4xl */
+    }
+    #field-wrap {
+      top: 3rem;
+      bottom: 3rem;
+    }
+
+    /* Desktop: full-screen overlay */
+    @media (min-width: 800px) {
+      #hero-title {
+        top: auto;
+        bottom: 3rem;
+        left: 3rem;
+        font-size: 4.5rem; /* text-7xl */
+      }
+      #hero-nav {
+        bottom: 3rem;
+        right: 3rem;
+        gap: 2.5rem;
+      }
+      #hero-nav a {
+        font-size: 3rem; /* text-5xl */
+      }
+      #field-wrap {
+        top: 0;
+        bottom: 0;
+      }
+    }
+  </style>
 
   <script>
     import { init } from "../components/FlowField";
@@ -32,7 +77,7 @@ import Base from "../layouts/Base.astro";
     function start() {
       destroy?.();
       const canvas = document.getElementById("field") as HTMLCanvasElement | null;
-      const container = document.getElementById("hero") as HTMLDivElement | null;
+      const container = document.getElementById("field-wrap") as HTMLDivElement | null;
       if (canvas && container) {
         destroy = init(canvas, container);
       }

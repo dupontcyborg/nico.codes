@@ -39,7 +39,21 @@
 
     activate();
 
-    window.addEventListener("mousemove", (e) => setPos(e.clientX, e.clientY));
+    // Hide cursor on touch — touch devices fire synthetic mousemove after tap
+    let recentTouch = false;
+    let touchTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener("touchstart", () => {
+      recentTouch = true;
+      clearTimeout(touchTimer);
+      touchTimer = setTimeout(() => { recentTouch = false; }, 500);
+      document.getElementById("cursor")?.classList.remove("visible");
+      hasMoved = false;
+    }, { passive: true });
+
+    window.addEventListener("mousemove", (e) => {
+      if (recentTouch) return;
+      setPos(e.clientX, e.clientY);
+    });
 
     document.addEventListener("mouseleave", () => {
       document.getElementById("cursor")?.classList.remove("visible");

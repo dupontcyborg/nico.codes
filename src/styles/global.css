@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  background: rgb(5, 6, 7);
+}
+
 /* Custom cursor — styles live here (not in Cursor.astro) so they survive
    View Transition head-swaps without flickering. */
 #cursor {

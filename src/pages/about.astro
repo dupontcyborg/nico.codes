@@ -8,12 +8,19 @@ const projects = [
     desc: "Fast, complete NumPy for TypeScript & JavaScript.",
     url: "numpyts.dev",
     logo: "/logos/numpy-ts.svg",
+    year: "2026",
+  },
+  {
+    name: "Overhead",
+    desc: "Augmented reality flight spotter for iOS.",
+    url: "overhead.cloud",
+    logo: "/logos/overhead.svg",
     year: "2025",
   },
   {
     name: "CyborgDB",
     desc: "Application-layer security for AI knowledge & memory.",
-    url: "docs.cyborg.co",
+    url: "www.cyborg.co",
     logo: "/logos/cyborgdb.svg",
     year: "2024",
   },
@@ -22,15 +29,9 @@ const projects = [
     desc: "End-to-end encrypted, searchable cloud storage.",
     url: "cyborg.co/stealth",
     logo: "/logos/stealth.svg",
-    year: "2023",
+    year: "2022",
   },
-  {
-    name: "Overhead",
-    desc: "Augmented reality flight spotter for iOS.",
-    url: "overhead.cloud",
-    logo: "/logos/overhead.svg",
-    year: "2026",
-  },
+
 ];
 ---
 
@@ -53,7 +54,10 @@ const projects = [
           Hi, I'm Nico Dupont.
         </h1>
         <p class="mt-[18px] text-[16px] leading-[1.75] text-white/70">
-          I'm a software engineer from Paris, based in New York. I run <a href="https://cyborg.co" target="_blank" rel="noopener noreferrer" class="text-white hover:text-white/70 underline underline-offset-2 decoration-white/25 hover:decoration-white/50 transition-colors">Cyborg</a> and spend most of my time building things (some ship, most don't). I really enjoy working on performance optimization, applied cryptography and complex problems. Also, I <a href="/blog" class="text-white hover:text-white/70 underline underline-offset-2 decoration-white/25 hover:decoration-white/50 transition-colors">write</a> sometimes.
+          I'm a software engineer from Paris, based in New York. I run <a href="https://cyborg.co" target="_blank" rel="noopener noreferrer" class="text-white hover:text-white/70 underline underline-offset-2 decoration-white/25 hover:decoration-white/50 transition-colors">Cyborg</a> and spend most of my time building things (some ship, most don't). I really enjoy working on performance optimization and applied cryptography, and sometimes I <a href="/blog" class="text-white hover:text-white/70 underline underline-offset-2 decoration-white/25 hover:decoration-white/50 transition-colors">write</a>.
+        </p>
+        <p class="mt-[10px] text-[16px] leading-[1.75] text-white/70">
+          Outside of being an absolute nerd, I'm a big football/soccer fan (Allez les Bleus & Ici c'est Paris!) and an avid snowboarder.
         </p>
         <div class="mt-4 flex items-center gap-4">
           <a
@@ -90,12 +94,12 @@ const projects = [
               href={`https://${p.url}`}
               target="_blank"
               rel="noopener noreferrer"
-              class="group grid grid-cols-[24px_120px_1fr_60px] gap-4 items-center py-4 px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
+              class="group grid grid-cols-[24px_100px_1fr] sm:grid-cols-[24px_120px_1fr_60px] gap-4 items-center py-4 px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
             >
               <img src={p.logo} alt="" class="h-5 w-5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
               <span class="text-[15px] text-white/80 font-medium group-hover:text-white transition-colors">{p.name}</span>
               <span class="text-sm text-white/40 leading-relaxed group-hover:text-white/60 transition-colors">{p.desc}</span>
-              <span class="text-xs text-white/30 font-mono text-right">{p.year}</span>
+              <span class="hidden sm:block text-xs text-white/30 font-mono text-right">{p.year}</span>
             </a>
           </li>
         ))}
