@@ -8,15 +8,17 @@ interface Props {
   pubDate: Date;
   updatedDate?: Date;
   ogImage?: string;
+  toc?: boolean;
 }
 
-const { title, description, pubDate, updatedDate, ogImage } = Astro.props;
+const { title, description, pubDate, updatedDate, ogImage, toc = true } = Astro.props;
 
 function formatDate(date: Date) {
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -25,13 +27,14 @@ function formatDateLong(date: Date) {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "UTC",
   });
 }
 ---
 
 <Base title={`${title} — nico.codes`} description={description} ogImage={ogImage}>
   <Header />
-  <main class="mx-auto max-w-[880px] px-8 pt-14 pb-16 grid grid-cols-1 md:grid-cols-[1fr_160px] gap-12">
+  <main id="post-main" class="mx-auto max-w-[880px] px-8 pt-14 pb-16 grid grid-cols-1 gap-12">
     <article>
       <div class="text-xs text-white/30 font-mono">
         {formatDate(pubDate)}
@@ -51,18 +54,31 @@ function formatDateLong(date: Date) {
 
       <div class="h-px bg-white/[0.08] my-7"></div>
 
-      <div class="prose prose-invert prose-sm max-w-none post-body">
+      <div class="max-w-none post-body">
         <slot />
       </div>
     </article>
 
-    <aside id="post-outline" class="hidden md:block font-mono text-[11px] text-white/55 leading-relaxed">
-      <div class="sticky top-6">
-        <div class="text-white/30 mb-3 text-[11px] tracking-wider uppercase">Contents</div>
-        <nav id="outline-nav"></nav>
-      </div>
-    </aside>
+    {toc && (
+      <aside id="post-outline" class="hidden text-[13px] text-white/55 leading-relaxed">
+        <div class="sticky top-6">
+          <div class="text-white/30 mb-3 text-[11px] tracking-wider uppercase">Contents</div>
+          <nav id="outline-nav"></nav>
+        </div>
+      </aside>
+    )}
   </main>
+
+  <style>
+    @media (min-width: 960px) {
+      #post-main {
+        grid-template-columns: 1fr 160px;
+      }
+      #post-outline {
+        display: block;
+      }
+    }
+  </style>
 
   <script>
     function initOutline() {
@@ -72,7 +88,10 @@ function formatDateLong(date: Date) {
 
       const headings = article.querySelectorAll("h2, h3");
       if (headings.length === 0) {
-        document.getElementById("post-outline")?.classList.add("md:hidden");
+        const outline = document.getElementById("post-outline");
+        if (outline) outline.style.display = "none";
+        // Collapse to single column when no TOC
+        document.getElementById("post-main")?.style.setProperty("grid-template-columns", "1fr");
         return;
       }
 
@@ -85,11 +104,25 @@ function formatDateLong(date: Date) {
         }
         ids.push(h.id);
 
+        const isH3 = h.tagName === "H3";
         const link = document.createElement("a");
         link.href = `#${h.id}`;
         link.textContent = h.textContent || "";
-        link.className = "block py-0.5 pl-2 border-l-2 border-white/[0.08] text-white/55 no-underline transition-colors duration-200 hover:text-white/80";
-        link.style.cursor = "pointer";
+        Object.assign(link.style, {
+          display: "block",
+          padding: "2px 0 2px 8px",
+          marginLeft: isH3 ? "10px" : "0",
+          borderLeft: "2px solid rgba(245,247,250,0.08)",
+          color: "rgba(245,247,250,0.4)",
+          textDecoration: "none",
+          cursor: "pointer",
+          transition: "color 200ms, border-left-color 200ms",
+          fontSize: isH3 ? "12px" : "13px",
+        });
+        link.addEventListener("mouseenter", () => { link.style.color = "rgba(245,247,250,0.7)"; });
+        link.addEventListener("mouseleave", () => {
+          if (!link.dataset.active) link.style.color = "rgba(245,247,250,0.4)";
+        });
         link.addEventListener("click", (e) => {
           e.preventDefault();
           const el = document.getElementById(h.id);
@@ -106,10 +139,11 @@ function formatDateLong(date: Date) {
           const top = el.getBoundingClientRect().top;
           if (top <= 80) activeId = id;
         }
-        nav.querySelectorAll("a").forEach((a) => {
+        nav.querySelectorAll("a").forEach((a: HTMLAnchorElement) => {
           const isActive = a.getAttribute("href") === `#${activeId}`;
-          a.style.borderLeftColor = isActive ? "rgba(220,160,120,0.85)" : "rgba(245,247,250,0.08)";
-          a.style.color = isActive ? "rgb(245,247,250)" : "";
+          a.dataset.active = isActive ? "true" : "";
+          a.style.borderLeftColor = isActive ? "rgba(245,247,250,0.5)" : "rgba(245,247,250,0.08)";
+          a.style.color = isActive ? "rgb(245,247,250)" : "rgba(245,247,250,0.4)";
         });
       }
 

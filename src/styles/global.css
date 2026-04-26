@@ -58,3 +58,173 @@ html[data-cursor="active"] input,
 html[data-cursor="active"] textarea {
   cursor: text !important;
 }
+
+/* Blog prose — hand-rolled since we don't use @tailwindcss/typography */
+.post-body {
+  font-size: 15.5px;
+  line-height: 1.75;
+  color: rgba(245, 247, 250, 0.85);
+}
+
+.post-body p {
+  margin: 1em 0;
+}
+.post-body p:first-child {
+  margin-top: 0;
+}
+
+/* Headings */
+.post-body h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 2.5rem 0 0.75rem;
+  color: rgb(245, 247, 250);
+  scroll-margin-top: 1.5rem;
+}
+.post-body h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.5rem;
+  color: rgb(245, 247, 250);
+  scroll-margin-top: 1.5rem;
+}
+.post-body h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+  color: rgba(245, 247, 250, 0.9);
+}
+.post-body h5 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: rgba(245, 247, 250, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Links */
+.post-body a {
+  color: rgb(245, 247, 250);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(245, 247, 250, 0.25);
+  transition: text-decoration-color 150ms;
+}
+.post-body a:hover {
+  text-decoration-color: rgba(245, 247, 250, 0.6);
+}
+
+/* Inline code */
+.post-body code:not(pre code) {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: rgba(245, 247, 250, 0.06);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* Code blocks */
+.post-body pre {
+  margin: 1.25rem 0;
+  padding: 14px 16px;
+  background: #191a1b !important;
+  border: 1px solid rgba(245, 247, 250, 0.08);
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.post-body pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Blockquotes */
+.post-body blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid rgba(245, 247, 250, 0.15);
+  color: rgba(245, 247, 250, 0.6);
+  font-style: italic;
+}
+.post-body blockquote p {
+  margin: 0.5em 0;
+}
+
+/* Lists */
+.post-body ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+.post-body ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+.post-body li {
+  margin: 0.35rem 0;
+}
+.post-body li::marker {
+  color: rgba(245, 247, 250, 0.3);
+}
+.post-body ul ul,
+.post-body ol ul,
+.post-body ul ol {
+  margin: 0.25rem 0;
+}
+
+/* Strong / em */
+.post-body strong {
+  color: rgb(245, 247, 250);
+  font-weight: 600;
+}
+
+/* Horizontal rule */
+.post-body hr {
+  border: none;
+  height: 1px;
+  background: rgba(245, 247, 250, 0.08);
+  margin: 2rem 0;
+}
+
+/* Tables */
+.post-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 14px;
+}
+.post-body th {
+  text-align: left;
+  font-weight: 500;
+  color: rgba(245, 247, 250, 0.5);
+  border-bottom: 1px solid rgba(245, 247, 250, 0.12);
+  padding: 8px 12px 8px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.post-body td {
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid rgba(245, 247, 250, 0.06);
+  color: rgba(245, 247, 250, 0.7);
+}
+
+/* Images */
+.post-body img {
+  max-width: 100%;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+}
+
+/* Strikethrough */
+.post-body del {
+  color: rgba(245, 247, 250, 0.4);
+}
