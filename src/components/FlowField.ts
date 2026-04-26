@@ -16,7 +16,11 @@ import {
   type NDArrayCore,
 } from "numpy-ts/core";
 
-configureWasm({ maxMemory: 32 * 1024 * 1024 });
+// Guard: configureWasm throws if called after WASM is already initialized
+// (happens when Astro View Transitions re-evaluate this module)
+try { configureWasm({ maxMemory: 32 * 1024 * 1024 }); } catch {}
+
+const DEBUG_WASM = import.meta.env.DEV;
 
 // --- Math utilities ---
 
@@ -26,16 +30,6 @@ function clamp(value: number, min: number, max: number) {
 
 function damp(current: number, target: number, easing: number) {
   return current + (target - current) * easing;
-}
-
-// --- Seed state ---
-
-interface Seed {
-  x: number;
-  y: number;
-  strength: number;
-  decay: number;
-  pulse: number;
 }
 
 // --- Grid cache ---
@@ -70,7 +64,6 @@ function buildField(
   pointerX: number,
   pointerY: number,
   pointerEnergy: number,
-  seeds: Seed[],
 ) {
   const { X, Y } = getGrid(cols, rows);
   const drift = time * 0.00008;
@@ -114,34 +107,6 @@ function buildField(
     { using old = v; v = add(old, swirlDx); }
   }
 
-  // Seed influences
-  for (const seed of seeds) {
-    using localDx = subtract(X, seed.x);
-    using localDy = subtract(Y, seed.y);
-    using dxSq = multiply(localDx, localDx);
-    using dySq = multiply(localDy, localDy);
-    using localDist = add(dxSq, dySq);
-    const envelopeScale = 0.03 + seed.decay * 0.075;
-    using scaledDist = divide(localDist, -envelopeScale);
-    using localEnvelope = exp(scaledDist);
-    const strength = seed.strength * seed.decay;
-    using localPush = multiply(localEnvelope, strength);
-    using localSwirl = multiply(localEnvelope, strength * 0.24);
-
-    using pushDx = multiply(localDx, localPush);
-    { using old = u; u = add(old, pushDx); }
-
-    using pushDy = multiply(localDy, localPush);
-    { using old = v; v = add(old, pushDy); }
-
-    using negDy = multiply(localDy, -1);
-    using swirlDy = multiply(negDy, localSwirl);
-    { using old = u; u = add(old, swirlDy); }
-
-    using swirlDx = multiply(localDx, localSwirl);
-    { using old = v; v = add(old, swirlDx); }
-  }
-
   // Normalization
   using uSq = multiply(u, u);
   using vSq = multiply(v, v);
@@ -163,7 +128,6 @@ interface PointerState {
   ny: number;
   speed: number;
   inside: boolean;
-  down: boolean;
 }
 
 function trackPointer(container: HTMLElement): {
@@ -177,7 +141,6 @@ function trackPointer(container: HTMLElement): {
     ny: 0,
     speed: 0,
     inside: false,
-    down: false,
   };
 
   let lastX = 0;
@@ -211,18 +174,10 @@ function trackPointer(container: HTMLElement): {
     pointer.inside = false;
     pointer.speed = 0;
   };
-  const onDown = () => {
-    pointer.down = true;
-  };
-  const onUp = () => {
-    pointer.down = false;
-  };
 
   container.addEventListener("pointermove", onMove);
   container.addEventListener("pointerenter", onEnter);
   container.addEventListener("pointerleave", onLeave);
-  container.addEventListener("pointerdown", onDown);
-  window.addEventListener("pointerup", onUp);
 
   return {
     state: pointer,
@@ -230,8 +185,6 @@ function trackPointer(container: HTMLElement): {
       container.removeEventListener("pointermove", onMove);
       container.removeEventListener("pointerenter", onEnter);
       container.removeEventListener("pointerleave", onLeave);
-      container.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointerup", onUp);
     },
   };
 }
@@ -280,29 +233,9 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   const { state: pointer, destroy: destroyPointer } = trackPointer(container);
 
   let energy = 0;
-  let seeds: Seed[] = [];
 
   // Previous frame's field results (disposed each frame)
   let prevField: { u: NDArrayCore; v: NDArrayCore; magnitude: NDArrayCore } | null = null;
-
-  // Click to place seeds — invert the margin transform so seeds render at the cursor
-  function onClick(event: MouseEvent) {
-    const rect = container.getBoundingClientRect();
-    const px = event.clientX - rect.left;
-    const py = event.clientY - rect.top;
-    const marginX = rect.width * 0.07;
-    const marginY = rect.height * 0.08;
-    const usableWidth = rect.width - marginX * 2;
-    const usableHeight = rect.height - marginY * 2;
-    const x = ((px - marginX) / usableWidth) * 2 - 1;
-    const y = ((py - marginY) / usableHeight) * 2 - 1;
-    seeds = [{ x, y, strength: 3.35, decay: 1, pulse: 1 }, ...seeds].slice(
-      0,
-      6,
-    );
-  }
-
-  container.addEventListener("click", onClick);
 
   const ctx = canvas.getContext("2d")!;
   let frameId = 0;
@@ -312,18 +245,19 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   function frame(time: number) {
     frameId = requestAnimationFrame(frame);
 
-    // Log WASM heap free bytes every second
-    frameCount++;
-    if (time - lastLogTime > 1000) {
-      const free = (wasmFreeBytes as () => number)();
-      const total = 32 * 1024 * 1024;
-      const used = total - free;
-      console.log(
-        `[wasm] ${(used / 1024).toFixed(0)}KB used / ${(total / 1024).toFixed(0)}KB total ` +
-        `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`
-      );
-      frameCount = 0;
-      lastLogTime = time;
+    if (DEBUG_WASM) {
+      frameCount++;
+      if (time - lastLogTime > 1000) {
+        const free = (wasmFreeBytes as () => number)();
+        const total = 32 * 1024 * 1024;
+        const used = total - free;
+        console.log(
+          `[wasm:field] ${(used / 1024).toFixed(0)}KB used / ${(total / 1024).toFixed(0)}KB total ` +
+          `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`
+        );
+        frameCount = 0;
+        lastLogTime = time;
+      }
     }
 
     const { width, height, dpr } = metrics;
@@ -333,15 +267,10 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     energy = damp(
       energy,
       pointer.inside
-        ? clamp(pointer.speed * 9 + (pointer.down ? 0.35 : 0.08), 0, 1.2)
+        ? clamp(pointer.speed * 9 + 0.08, 0, 1.2)
         : 0,
       0.035,
     );
-
-    // Decay seeds
-    seeds = seeds
-      .map((s) => ({ ...s, decay: s.decay * 0.993, pulse: s.pulse * 0.72 }))
-      .filter((s) => s.decay > 0.08);
 
     // Dispose previous frame's output arrays
     if (prevField) {
@@ -356,7 +285,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     const rows = clamp(Math.floor(height / FIELD_SPACING), 18, 36);
     const pointerX = pointer.nx * 2 - 1;
     const pointerY = pointer.ny * 2 - 1;
-    const field = buildField(cols, rows, time, pointerX, pointerY, energy, seeds);
+    const field = buildField(cols, rows, time, pointerX, pointerY, energy);
 
     const xData = field.X.data as Float64Array;
     const yData = field.Y.data as Float64Array;
@@ -388,50 +317,10 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       const dx = uData[i] * len;
       const dy = vData[i] * len;
 
-      // Skip vectors near seeds
-      let nearSeed = false;
-      for (const seed of seeds) {
-        const sx = marginX + ((seed.x + 1) * 0.5) * usableWidth;
-        const sy = marginY + ((seed.y + 1) * 0.5) * usableHeight;
-        if (Math.hypot(px - sx, py - sy) < 24) {
-          nearSeed = true;
-          break;
-        }
-      }
-      if (nearSeed) continue;
-
       ctx.beginPath();
       ctx.moveTo(px - dx * 0.44, py - dy * 0.44);
       ctx.lineTo(px + dx * 0.56, py + dy * 0.56);
       ctx.strokeStyle = `rgba(245, 247, 250, ${0.1 + ratio * 0.52})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    // Draw seed effects
-    for (const seed of seeds) {
-      const px = marginX + ((seed.x + 1) * 0.5) * usableWidth;
-      const py = marginY + ((seed.y + 1) * 0.5) * usableHeight;
-      const radius = 12 + seed.decay * 26;
-      const pulseRadius = radius + (1 - seed.pulse) * 10;
-
-      const grad = ctx.createRadialGradient(px, py, 0, px, py, radius * 1.35);
-      grad.addColorStop(0, "rgba(245, 247, 250, 0.08)");
-      grad.addColorStop(1, "rgba(245, 247, 250, 0)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(px, py, radius * 1.35, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(px, py, pulseRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(245, 247, 250, ${seed.pulse * 0.1})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(px, py, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(245, 247, 250, ${0.08 + seed.decay * 0.22})`;
       ctx.lineWidth = 1;
       ctx.stroke();
     }
@@ -456,7 +345,6 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
 
   return function destroy() {
     cancelAnimationFrame(frameId);
-    container.removeEventListener("click", onClick);
     destroyPointer();
     destroyCanvas();
     if (prevField) {
