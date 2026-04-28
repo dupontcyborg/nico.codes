@@ -18,12 +18,22 @@ function clamp(v: number, a: number, b: number) {
 
 // Persists across destroy/init cycles so the wave continues seamlessly
 let _t = 0;
+// Track whether masthead was on the previous page — reset reveal when coming from a page without it
+let _hasRevealed = false;
+let _destroyedAt = 0;
 
 /**
  * Animated horizontal ribbon of stacked wavy lines.
  * Uses numpy-ts vectorized sin to compute each wave across the full width.
  */
 export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
+  // Reset reveal if there was a gap since last destroy (came from a page without masthead)
+  // Inner→inner: destroy + init happen back-to-back (<100ms)
+  // Home→inner: destroy happened on a previous navigation, gap is large
+  const gap = _destroyedAt > 0 ? performance.now() - _destroyedAt : Infinity;
+  if (gap > 200) _hasRevealed = false;
+  _destroyedAt = 0;
+
   const ctx = canvas.getContext("2d")!;
   let dpr = 1;
   let w = 0;
@@ -32,6 +42,16 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   let running = true;
   let frameCount = 0;
   let lastLogTime = 0;
+
+  // Reveal animation: clip from left to right, then fade in contour lines
+  const shouldReveal = !_hasRevealed;
+  const REVEAL_DURATION = 600;
+  const CONTOUR_STAGGER = 150; // ms between each contour pair
+  const CONTOUR_FADE = 250;   // fade duration per line
+  let revealStart = -1;
+  let revealProgress = shouldReveal ? 0 : 1;
+  let contourElapsed = shouldReveal ? -1 : Infinity;
+  if (shouldReveal) _hasRevealed = true;
 
   // Cache the x-domain linspace so we only rebuild on resize
   let cachedW = 0;
@@ -86,9 +106,29 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
+    // Update reveal progress — ease-in (slow start, fast finish)
+    if (revealStart < 0 && revealProgress < 1) revealStart = time;
+    if (revealProgress < 1) {
+      const elapsed = time - revealStart;
+      const t = Math.min(1, elapsed / REVEAL_DURATION);
+      revealProgress = t * t * t;
+      if (revealProgress >= 1) contourElapsed = 0;
+    } else if (contourElapsed !== Infinity) {
+      if (contourElapsed < 0) contourElapsed = 0;
+      else contourElapsed += 1 / 60 * 1000;
+    }
+
     if (w === 0 || h === 0) {
       frameId = requestAnimationFrame(frame);
       return;
+    }
+
+    // Apply reveal clip
+    if (revealProgress < 1) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w * revealProgress, h);
+      ctx.clip();
     }
 
     const nPts = Math.ceil(w / STEP) + 1;
@@ -132,9 +172,23 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
         if (i === 0) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
       }
-      ctx.strokeStyle = `rgba(245,247,250,${L.alpha.toFixed(3)})`;
-      ctx.lineWidth = L.off === 0 ? 1.1 : 1;
+      const isMain = L.off === 0;
+      let alpha = L.alpha;
+      if (!isMain && contourElapsed !== Infinity) {
+        // Stagger: ±7 = tier 0, ±14 = tier 1, ±22 = tier 2
+        const tier = Math.round(Math.abs(L.off) / 7) - 1;
+        const lineStart = tier * CONTOUR_STAGGER;
+        const fade = contourElapsed < 0 ? 0 : Math.min(1, Math.max(0, (contourElapsed - lineStart) / CONTOUR_FADE));
+        alpha = L.alpha * fade;
+      }
+      ctx.strokeStyle = `rgba(245,247,250,${alpha.toFixed(3)})`;
+      ctx.lineWidth = isMain ? 1.1 : 1;
       ctx.stroke();
+    }
+
+    // Restore clip
+    if (revealProgress < 1) {
+      ctx.restore();
     }
 
     frameId = requestAnimationFrame(frame);
@@ -175,6 +229,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
 
   return function destroy() {
     running = false;
+    _destroyedAt = performance.now();
     cancelAnimationFrame(frameId);
     ro.disconnect();
     io.disconnect();
