@@ -220,8 +220,35 @@ html[data-cursor="active"] textarea {
 /* Images */
 .post-body img {
   max-width: 100%;
+  border-radius: 8px;
+  margin: 1.5rem auto;
+  display: block;
+  cursor: zoom-in;
+  transition: transform 300ms cubic-bezier(0.2, 0, 0.2, 1), border-radius 300ms;
+}
+
+/* Lightbox overlay */
+.img-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(5, 6, 7, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 300ms;
+  cursor: zoom-out;
+}
+.img-lightbox-overlay.active {
+  opacity: 1;
+}
+
+/* Zoomed image */
+.post-body img.lightbox-active {
+  position: relative;
+  z-index: 9001;
+  cursor: zoom-out;
   border-radius: 4px;
-  margin: 1.5rem 0;
 }
 
 /* Strikethrough */

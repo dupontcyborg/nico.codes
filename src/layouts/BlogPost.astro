@@ -97,6 +97,9 @@ function formatDateLong(date: Date) {
 
       nav.innerHTML = "";
       const ids: string[] = [];
+      const links: HTMLAnchorElement[] = [];
+      const lineColor = "rgba(245,247,250,0.08)";
+      const activeColor = "rgba(245,247,250,0.5)";
 
       headings.forEach((h, i) => {
         if (!h.id) {
@@ -111,8 +114,8 @@ function formatDateLong(date: Date) {
         Object.assign(link.style, {
           display: "block",
           padding: "2px 0 2px 8px",
-          marginLeft: isH3 ? "10px" : "0",
-          borderLeft: "2px solid rgba(245,247,250,0.08)",
+          marginLeft: isH3 ? "12px" : "0",
+          borderLeft: `2px solid ${lineColor}`,
           color: "rgba(245,247,250,0.4)",
           textDecoration: "none",
           cursor: "pointer",
@@ -125,10 +128,10 @@ function formatDateLong(date: Date) {
         });
         link.addEventListener("click", (e) => {
           e.preventDefault();
-          const el = document.getElementById(h.id);
-          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.getElementById(h.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
         nav.appendChild(link);
+        links.push(link);
       });
 
       function updateActive() {
@@ -139,10 +142,10 @@ function formatDateLong(date: Date) {
           const top = el.getBoundingClientRect().top;
           if (top <= 80) activeId = id;
         }
-        nav.querySelectorAll("a").forEach((a: HTMLAnchorElement) => {
+        links.forEach((a) => {
           const isActive = a.getAttribute("href") === `#${activeId}`;
           a.dataset.active = isActive ? "true" : "";
-          a.style.borderLeftColor = isActive ? "rgba(245,247,250,0.5)" : "rgba(245,247,250,0.08)";
+          a.style.borderLeftColor = isActive ? activeColor : lineColor;
           a.style.color = isActive ? "rgb(245,247,250)" : "rgba(245,247,250,0.4)";
         });
       }
@@ -153,5 +156,73 @@ function formatDateLong(date: Date) {
 
     initOutline();
     document.addEventListener("astro:after-swap", initOutline);
+
+    // --- Image lightbox ---
+    let overlay: HTMLDivElement | null = null;
+    let activeImg: HTMLImageElement | null = null;
+
+    function closeLightbox() {
+      if (!activeImg || !overlay) return;
+      const img = activeImg;
+      const ov = overlay;
+      activeImg = null;
+      overlay = null;
+
+      // Fade overlay and shrink image simultaneously
+      img.style.transform = "";
+      ov.classList.remove("active");
+
+      // Clean up after both transitions complete
+      setTimeout(() => {
+        img.classList.remove("lightbox-active");
+        ov.remove();
+      }, 320);
+    }
+
+    function openLightbox(img: HTMLImageElement) {
+      if (activeImg) return;
+      activeImg = img;
+
+      // Create overlay
+      overlay = document.createElement("div");
+      overlay.className = "img-lightbox-overlay";
+      document.body.appendChild(overlay);
+      // Force reflow then activate
+      overlay.offsetHeight;
+      overlay.classList.add("active");
+      overlay.addEventListener("click", closeLightbox);
+
+      // Calculate transform to center and scale
+      const rect = img.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const padding = 40;
+      const maxW = vw - padding * 2;
+      const maxH = vh - padding * 2;
+      const scale = Math.min(maxW / rect.width, maxH / rect.height, 1);
+      const dx = (vw / 2) - (rect.left + rect.width / 2);
+      const dy = (vh / 2) - (rect.top + rect.height / 2);
+
+      img.classList.add("lightbox-active");
+      img.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    }
+
+    function initLightbox() {
+      document.querySelectorAll<HTMLImageElement>(".post-body img").forEach((img) => {
+        img.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (activeImg) closeLightbox();
+          else openLightbox(img);
+        });
+      });
+    }
+
+    function onEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") closeLightbox();
+    }
+    window.addEventListener("keydown", onEsc);
+
+    initLightbox();
+    document.addEventListener("astro:after-swap", initLightbox);
   </script>
 </Base>
