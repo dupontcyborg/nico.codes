@@ -251,7 +251,11 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   // Previous frame's field results (disposed each frame)
   let prevField: { u: NDArrayCore; v: NDArrayCore; magnitude: NDArrayCore } | null = null;
 
-  const ctx = canvas.getContext("2d")!;
+  const ctx =
+    canvas.getContext("2d") ??
+    (() => {
+      throw new Error("2d canvas context unavailable");
+    })();
   let frameId = 0;
   let frameCount = 0;
   let lastLogTime = 0;

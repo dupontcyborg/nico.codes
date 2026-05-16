@@ -2,7 +2,9 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
-import satori from "satori";
+import satori, { type Font } from "satori";
+
+type SatoriNode = Parameters<typeof satori>[0];
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const BLOG_DIR = join(ROOT, "src/content/blog");
@@ -168,7 +170,7 @@ function card(title: string, description: string, eyebrow: string) {
   };
 }
 
-async function renderPng(node: any, fonts: any[], outPath: string) {
+async function renderPng(node: SatoriNode, fonts: Font[], outPath: string) {
   const svg = await satori(node, { width: WIDTH, height: HEIGHT, fonts });
   const png = new Resvg(svg, { fitTo: { mode: "width", value: WIDTH } }).render().asPng();
   await writeFile(outPath, png);
@@ -183,10 +185,10 @@ async function main() {
     fetchFont("Inter", 600),
     fetchFont("JetBrains Mono", 400),
   ]);
-  const fonts = [
-    { name: "Inter", data: interRegular, weight: 400, style: "normal" as const },
-    { name: "Inter", data: interSemi, weight: 600, style: "normal" as const },
-    { name: "JetBrains Mono", data: mono, weight: 400, style: "normal" as const },
+  const fonts: Font[] = [
+    { name: "Inter", data: interRegular, weight: 400, style: "normal" },
+    { name: "Inter", data: interSemi, weight: 600, style: "normal" },
+    { name: "JetBrains Mono", data: mono, weight: 400, style: "normal" },
   ];
 
   const posts = await loadPosts();

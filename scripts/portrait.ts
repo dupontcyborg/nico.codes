@@ -1,8 +1,8 @@
+import { readdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { removeBackground } from "@imgly/background-removal-node";
-import { readdirSync } from "fs";
-import { resolve } from "path";
 import sharp from "sharp";
-import { pathToFileURL } from "url";
 
 const SRC_DIR = "scripts/source";
 const OUT_DIR = "public/portraits";

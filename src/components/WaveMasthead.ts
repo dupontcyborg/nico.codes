@@ -36,7 +36,11 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   if (gap > 200) _hasRevealed = false;
   _destroyedAt = 0;
 
-  const ctx = canvas.getContext("2d")!;
+  const ctx =
+    canvas.getContext("2d") ??
+    (() => {
+      throw new Error("2d canvas context unavailable");
+    })();
   let dpr = 1;
   let w = 0;
   let h = 0;
@@ -141,23 +145,28 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       xArr = linspace(0, w, nPts);
       cachedW = nPts;
     }
+    const x = xArr;
+    if (!x) {
+      frameId = requestAnimationFrame(frame);
+      return;
+    }
 
     const yMid = h * 0.55;
 
     for (const L of LINES) {
       const yOffset = L.phase * 11;
 
-      using s1_inner = multiply(xArr!, 0.0042);
+      using s1_inner = multiply(x, 0.0042);
       using s1_shift = add(s1_inner, _t * 0.18 + yOffset * 0.018);
       using s1_raw = sin(s1_shift);
       using s1 = multiply(s1_raw, 0.55);
 
-      using s2_inner = multiply(xArr!, 0.0091);
+      using s2_inner = multiply(x, 0.0091);
       using s2_shift = add(s2_inner, -_t * 0.13 + yOffset * 0.011 + 1.7);
       using s2_raw = sin(s2_shift);
       using s2 = multiply(s2_raw, 0.3);
 
-      using s3_inner = multiply(xArr!, 0.0017);
+      using s3_inner = multiply(x, 0.0017);
       using s3_shift = add(s3_inner, _t * 0.07 + yOffset * 0.025 + 4.1);
       using s3_raw = sin(s3_shift);
       using s3 = multiply(s3_raw, 0.18);
