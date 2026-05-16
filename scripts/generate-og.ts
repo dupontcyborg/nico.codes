@@ -1,8 +1,8 @@
-import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join, basename } from "node:path";
-import satori from "satori";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { basename, join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
+import satori from "satori";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const BLOG_DIR = join(ROOT, "src/content/blog");
@@ -170,9 +170,7 @@ function card(title: string, description: string, eyebrow: string) {
 
 async function renderPng(node: any, fonts: any[], outPath: string) {
   const svg = await satori(node, { width: WIDTH, height: HEIGHT, fonts });
-  const png = new Resvg(svg, { fitTo: { mode: "width", value: WIDTH } })
-    .render()
-    .asPng();
+  const png = new Resvg(svg, { fitTo: { mode: "width", value: WIDTH } }).render().asPng();
   await writeFile(outPath, png);
 }
 

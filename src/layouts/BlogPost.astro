@@ -32,7 +32,14 @@ function formatDateLong(date: Date) {
 }
 ---
 
-<Base title={`${title} — nico.codes`} description={description} ogImage={ogImage}>
+<Base
+  title={`${title} — nico.codes`}
+  description={description}
+  ogImage={ogImage}
+  ogType="article"
+  pubDate={pubDate}
+  updatedDate={updatedDate}
+>
   <Header />
   <main id="post-main" class="mx-auto max-w-[880px] px-8 pt-14 pb-16 grid grid-cols-1 gap-12">
     <article>

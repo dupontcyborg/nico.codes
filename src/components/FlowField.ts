@@ -7,18 +7,20 @@ import {
   linspace,
   max,
   multiply,
+  type NDArrayCore,
   ones,
   outer,
   sin,
   sqrt,
   subtract,
   wasmFreeBytes,
-  type NDArrayCore,
 } from "numpy-ts/core";
 
 // Guard: configureWasm throws if called after WASM is already initialized
 // (happens when Astro View Transitions re-evaluate this module)
-try { configureWasm({ maxMemory: 32 * 1024 * 1024 }); } catch {}
+try {
+  configureWasm({ maxMemory: 32 * 1024 * 1024 });
+} catch {}
 
 const DEBUG_WASM = import.meta.env.DEV;
 
@@ -101,10 +103,16 @@ function buildField(
 
     using negDy = multiply(dy, -1);
     using swirlDy = multiply(negDy, swirl);
-    { using old = u; u = add(old, swirlDy); }
+    {
+      using old = u;
+      u = add(old, swirlDy);
+    }
 
     using swirlDx = multiply(dx, swirl);
-    { using old = v; v = add(old, swirlDx); }
+    {
+      using old = v;
+      v = add(old, swirlDx);
+    }
   }
 
   // Normalization
@@ -113,8 +121,14 @@ function buildField(
   using sumSq = add(uSq, vSq);
   using sumEps = add(sumSq, 1e-6);
   const magnitude = sqrt(sumEps);
-  { using old = u; u = divide(old, magnitude); }
-  { using old = v; v = divide(old, magnitude); }
+  {
+    using old = u;
+    u = divide(old, magnitude);
+  }
+  {
+    using old = v;
+    v = divide(old, magnitude);
+  }
 
   return { X, Y, u, v, magnitude };
 }
@@ -253,7 +267,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
         const used = total - free;
         console.log(
           `[wasm:field] ${(used / 1024).toFixed(0)}KB used / ${(total / 1024).toFixed(0)}KB total ` +
-          `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`
+            `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`,
         );
         frameCount = 0;
         lastLogTime = time;
@@ -264,13 +278,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     if (width === 0 || height === 0) return;
 
     // Update energy
-    energy = damp(
-      energy,
-      pointer.inside
-        ? clamp(pointer.speed * 9 + 0.08, 0, 1.2)
-        : 0,
-      0.035,
-    );
+    energy = damp(energy, pointer.inside ? clamp(pointer.speed * 9 + 0.08, 0, 1.2) : 0, 0.035);
 
     // Dispose previous frame's output arrays
     if (prevField) {
@@ -310,8 +318,8 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     const usableHeight = height - marginY * 2;
 
     for (let i = 0; i < xData.length; i++) {
-      const px = marginX + ((xData[i] + 1) * 0.5) * usableWidth;
-      const py = marginY + ((yData[i] + 1) * 0.5) * usableHeight;
+      const px = marginX + (xData[i] + 1) * 0.5 * usableWidth;
+      const py = marginY + (yData[i] + 1) * 0.5 * usableHeight;
       const ratio = clamp(magnitudeData[i] / magnitudeMax, 0, 1);
       const len = FIELD_LENGTH + ratio * 8;
       const dx = uData[i] * len;
@@ -328,10 +336,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
     // Pointer glow
     if (pointer.inside) {
       const r = 30 + energy * 44;
-      const grad = ctx.createRadialGradient(
-        pointer.x, pointer.y, 0,
-        pointer.x, pointer.y, r,
-      );
+      const grad = ctx.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, r);
       grad.addColorStop(0, "rgba(245, 247, 250, 0.1)");
       grad.addColorStop(1, "rgba(245, 247, 250, 0)");
       ctx.fillStyle = grad;

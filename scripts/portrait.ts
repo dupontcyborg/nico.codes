@@ -1,8 +1,8 @@
 import { removeBackground } from "@imgly/background-removal-node";
-import sharp from "sharp";
-import { resolve } from "path";
-import { pathToFileURL } from "url";
 import { readdirSync } from "fs";
+import { resolve } from "path";
+import sharp from "sharp";
+import { pathToFileURL } from "url";
 
 const SRC_DIR = "scripts/source";
 const OUT_DIR = "public/portraits";
@@ -26,8 +26,11 @@ function atkinson(pixels: Uint8Array, w: number, h: number) {
         const ny = y + dy;
         if (nx >= 0 && nx < w && ny >= 0 && ny < h) buf[ny * w + nx] += err;
       };
-      add(1, 0); add(2, 0);
-      add(-1, 1); add(0, 1); add(1, 1);
+      add(1, 0);
+      add(2, 0);
+      add(-1, 1);
+      add(0, 1);
+      add(1, 1);
       add(0, 2);
     }
   }

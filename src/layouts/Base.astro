@@ -7,15 +7,23 @@ interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  ogType?: "website" | "article";
+  pubDate?: Date;
+  updatedDate?: Date;
 }
 
 const {
   title,
   description = "nico.codes — personal site and notes",
   ogImage = "/social/og-default.png",
+  ogType = "website",
+  pubDate,
+  updatedDate,
 } = Astro.props;
 
-const ogImageAbsolute = new URL(ogImage, Astro.site ?? Astro.url).toString();
+const siteUrl = Astro.site ?? Astro.url;
+const ogImageAbsolute = new URL(ogImage, siteUrl).toString();
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
 ---
 
 <!doctype html>
@@ -25,12 +33,26 @@ const ogImageAbsolute = new URL(ogImage, Astro.site ?? Astro.url).toString();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImageAbsolute} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="nico.codes" />
+    <meta property="og:type" content={ogType} />
+    {ogType === "article" && pubDate && (
+      <meta property="article:published_time" content={pubDate.toISOString()} />
+    )}
+    {ogType === "article" && updatedDate && (
+      <meta property="article:modified_time" content={updatedDate.toISOString()} />
+    )}
+    {ogType === "article" && (
+      <meta property="article:author" content="Nicolas Dupont" />
+    )}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageAbsolute} />
-    <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link
       rel="alternate"

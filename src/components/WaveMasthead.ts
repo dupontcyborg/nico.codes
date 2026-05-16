@@ -3,12 +3,14 @@ import {
   configureWasm,
   linspace,
   multiply,
+  type NDArrayCore,
   sin,
   wasmFreeBytes,
-  type NDArrayCore,
 } from "numpy-ts/core";
 
-try { configureWasm({ maxMemory: 32 * 1024 * 1024 }); } catch {}
+try {
+  configureWasm({ maxMemory: 32 * 1024 * 1024 });
+} catch {}
 
 const DEBUG_WASM = import.meta.env.DEV;
 
@@ -47,7 +49,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
   const shouldReveal = !_hasRevealed;
   const REVEAL_DURATION = 600;
   const CONTOUR_STAGGER = 150; // ms between each contour pair
-  const CONTOUR_FADE = 250;   // fade duration per line
+  const CONTOUR_FADE = 250; // fade duration per line
   let revealStart = -1;
   let revealProgress = shouldReveal ? 0 : 1;
   let contourElapsed = shouldReveal ? -1 : Infinity;
@@ -75,13 +77,13 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
 
   // Each line: vertical offset, opacity, amplitude, phase
   const LINES = [
-    { off: -22, alpha: 0.10, amp: 14, phase: 0.0 },
+    { off: -22, alpha: 0.1, amp: 14, phase: 0.0 },
     { off: -14, alpha: 0.18, amp: 18, phase: 0.4 },
-    { off:  -7, alpha: 0.32, amp: 22, phase: 0.8 },
-    { off:   0, alpha: 0.85, amp: 26, phase: 1.2 }, // main
-    { off:   7, alpha: 0.32, amp: 22, phase: 1.6 },
-    { off:  14, alpha: 0.18, amp: 18, phase: 2.0 },
-    { off:  22, alpha: 0.10, amp: 14, phase: 2.4 },
+    { off: -7, alpha: 0.32, amp: 22, phase: 0.8 },
+    { off: 0, alpha: 0.85, amp: 26, phase: 1.2 }, // main
+    { off: 7, alpha: 0.32, amp: 22, phase: 1.6 },
+    { off: 14, alpha: 0.18, amp: 18, phase: 2.0 },
+    { off: 22, alpha: 0.1, amp: 14, phase: 2.4 },
   ];
 
   function frame(time: number) {
@@ -96,7 +98,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
         const used = total - free;
         console.log(
           `[wasm:masthead] ${(used / 1024).toFixed(0)}KB used / ${(total / 1024).toFixed(0)}KB total ` +
-          `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`
+            `(${(free / 1024).toFixed(0)}KB free) — ${frameCount} frames/s`,
         );
         frameCount = 0;
         lastLogTime = time;
@@ -115,7 +117,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       if (revealProgress >= 1) contourElapsed = 0;
     } else if (contourElapsed !== Infinity) {
       if (contourElapsed < 0) contourElapsed = 0;
-      else contourElapsed += 1 / 60 * 1000;
+      else contourElapsed += (1 / 60) * 1000;
     }
 
     if (w === 0 || h === 0) {
@@ -153,7 +155,7 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
       using s2_inner = multiply(xArr!, 0.0091);
       using s2_shift = add(s2_inner, -_t * 0.13 + yOffset * 0.011 + 1.7);
       using s2_raw = sin(s2_shift);
-      using s2 = multiply(s2_raw, 0.30);
+      using s2 = multiply(s2_raw, 0.3);
 
       using s3_inner = multiply(xArr!, 0.0017);
       using s3_shift = add(s3_inner, _t * 0.07 + yOffset * 0.025 + 4.1);
@@ -178,7 +180,10 @@ export function init(canvas: HTMLCanvasElement, container: HTMLElement) {
         // Stagger: ±7 = tier 0, ±14 = tier 1, ±22 = tier 2
         const tier = Math.round(Math.abs(L.off) / 7) - 1;
         const lineStart = tier * CONTOUR_STAGGER;
-        const fade = contourElapsed < 0 ? 0 : Math.min(1, Math.max(0, (contourElapsed - lineStart) / CONTOUR_FADE));
+        const fade =
+          contourElapsed < 0
+            ? 0
+            : Math.min(1, Math.max(0, (contourElapsed - lineStart) / CONTOUR_FADE));
         alpha = L.alpha * fade;
       }
       ctx.strokeStyle = `rgba(245,247,250,${alpha.toFixed(3)})`;
