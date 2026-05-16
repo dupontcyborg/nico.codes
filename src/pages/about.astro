@@ -8,28 +8,30 @@ const projects = [
     desc: "Fast, complete NumPy for TypeScript & JavaScript.",
     url: "numpyts.dev",
     logo: "/logos/numpy-ts.svg",
-    year: "2026",
+  },
+  {
+    name: "FlightyCO2",
+    desc: "Flight emissions calculator for Flighty users.",
+    url: "flightyco2.com",
+    logo: "/logos/flightyco2.svg",
   },
   {
     name: "Overhead",
     desc: "Augmented reality flight spotter for iOS.",
     url: "overhead.cloud",
     logo: "/logos/overhead.svg",
-    year: "2025",
   },
   {
     name: "CyborgDB",
     desc: "Application-layer security for AI knowledge & memory.",
     url: "www.cyborg.co",
     logo: "/logos/cyborgdb.svg",
-    year: "2024",
   },
   {
     name: "Stealth",
     desc: "End-to-end encrypted, searchable cloud storage.",
     url: "cyborg.co/stealth",
     logo: "/logos/stealth.svg",
-    year: "2022",
   },
 
 ];
@@ -84,7 +86,7 @@ const projects = [
 
     <section class="mt-14">
       <h2 class="text-[13px] font-medium text-white/30 m-0 mb-5 tracking-wider uppercase">
-        Some of my projects
+        Some things I've built
       </h2>
       <ul class="list-none p-0 m-0">
         {projects.map((p, i) => (
@@ -94,12 +96,11 @@ const projects = [
               href={`https://${p.url}`}
               target="_blank"
               rel="noopener noreferrer"
-              class="group grid grid-cols-[24px_100px_1fr] sm:grid-cols-[24px_120px_1fr_60px] gap-4 items-center py-4 px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
+              class="group grid grid-cols-[24px_100px_1fr] sm:grid-cols-[24px_120px_1fr] gap-4 items-center py-4 px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
             >
               <img src={p.logo} alt="" class="h-5 w-5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
               <span class="text-[15px] text-white/80 font-medium group-hover:text-white transition-colors">{p.name}</span>
               <span class="text-sm text-white/40 leading-relaxed group-hover:text-white/60 transition-colors">{p.desc}</span>
-              <span class="hidden sm:block text-xs text-white/30 font-mono text-right">{p.year}</span>
             </a>
           </li>
         ))}

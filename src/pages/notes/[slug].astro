@@ -16,7 +16,7 @@ const { Content } = await render(post);
   description={post.data.description}
   pubDate={post.data.pubDate}
   updatedDate={post.data.updatedDate}
-  ogImage={post.data.ogImage}
+  ogImage={post.data.ogImage ?? `/social/og-${post.id}.png`}
   toc={post.data.toc}
 >
   <Content />
