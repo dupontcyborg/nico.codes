@@ -1,10 +1,10 @@
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "astro/config";
 import type { AstroIntegration } from "astro";
+import { defineConfig } from "astro/config";
 
 // Walk every emitted entry script, follow its static imports one level deep,
 // and inject <link rel="modulepreload"> tags for them. Eliminates the
@@ -37,14 +37,18 @@ function preloadStaticImports(): AstroIntegration {
 
         async function rewrite(file: string) {
           const html = await readFile(file, "utf8");
-          const entries = [...html.matchAll(/<script type="module" src="\/_astro\/([^"]+)"/g)].map((m) => m[1]);
+          const entries = [...html.matchAll(/<script type="module" src="\/_astro\/([^"]+)"/g)].map(
+            (m) => m[1],
+          );
           if (!entries.length) return;
           const preloads = new Set<string>();
           for (const entry of entries) {
             for (const dep of chunkImports.get(entry) ?? []) preloads.add(dep);
           }
           if (!preloads.size) return;
-          const tags = [...preloads].map((d) => `<link rel="modulepreload" href="/_astro/${d}">`).join("");
+          const tags = [...preloads]
+            .map((d) => `<link rel="modulepreload" href="/_astro/${d}">`)
+            .join("");
           await writeFile(file, html.replace("</head>", `${tags}</head>`));
         }
 
