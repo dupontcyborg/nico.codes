@@ -99,7 +99,11 @@ const projects = [
               class="group grid grid-cols-[24px_100px_1fr] sm:grid-cols-[24px_120px_1fr] gap-4 items-center py-4 px-4 -mx-4 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]"
             >
               <img src={p.logo} alt="" class="h-5 w-5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
-              <span class="text-[15px] text-white/80 font-medium group-hover:text-white transition-colors">{p.name}</span>
+              <span class="text-[15px] text-white/80 font-medium group-hover:text-white transition-colors">
+                {p.name === "FlightyCO2" ? (
+                  <>FlightyCO<sub class="text-[0.6em]">2</sub></>
+                ) : p.name}
+              </span>
               <span class="text-sm text-white/40 leading-relaxed group-hover:text-white/60 transition-colors">{p.desc}</span>
             </a>
           </li>

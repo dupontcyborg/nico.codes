@@ -149,6 +149,12 @@ function formatDateLong(date: Date) {
           const top = el.getBoundingClientRect().top;
           if (top <= 80) activeId = id;
         }
+        // If we're at the bottom of the page, force-highlight the last heading
+        // — short final sections never reach the 80px threshold otherwise.
+        const atBottom =
+          window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 4;
+        if (atBottom) activeId = ids[ids.length - 1];
         links.forEach((a) => {
           const isActive = a.getAttribute("href") === `#${activeId}`;
           a.dataset.active = isActive ? "true" : "";

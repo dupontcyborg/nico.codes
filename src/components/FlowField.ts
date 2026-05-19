@@ -184,14 +184,30 @@ function trackPointer(container: HTMLElement): {
 
   const onMove = (e: PointerEvent) => update(e, true);
   const onEnter = (e: PointerEvent) => update(e, true);
-  const onLeave = () => {
+  const onDown = (e: PointerEvent) => update(e, true);
+  const onLeave = (e: PointerEvent) => {
+    // Touch: lifting a finger fires pointerleave immediately. Keep the swirl
+    // anchored at the last touch position so the field can decay gracefully.
+    if (e.pointerType !== "mouse") {
+      pointer.speed = 0;
+      return;
+    }
     pointer.inside = false;
     pointer.speed = 0;
+  };
+  const onUp = (e: PointerEvent) => {
+    if (e.pointerType !== "mouse") {
+      pointer.inside = false;
+      pointer.speed = 0;
+    }
   };
 
   container.addEventListener("pointermove", onMove);
   container.addEventListener("pointerenter", onEnter);
   container.addEventListener("pointerleave", onLeave);
+  container.addEventListener("pointerdown", onDown);
+  container.addEventListener("pointerup", onUp);
+  container.addEventListener("pointercancel", onUp);
 
   return {
     state: pointer,
@@ -199,6 +215,9 @@ function trackPointer(container: HTMLElement): {
       container.removeEventListener("pointermove", onMove);
       container.removeEventListener("pointerenter", onEnter);
       container.removeEventListener("pointerleave", onLeave);
+      container.removeEventListener("pointerdown", onDown);
+      container.removeEventListener("pointerup", onUp);
+      container.removeEventListener("pointercancel", onUp);
     },
   };
 }
