@@ -29,9 +29,9 @@
     "@biomejs/biome": "^2.4.15",
     "@imgly/background-removal-node": "^1.4.5",
     "@resvg/resvg-js": "^2.6.2",
-    "@types/node": "^25.8.0",
+    "@types/node": "^25.9.1",
     "satori": "^0.26.0",
-    "tsx": "^4.22.0",
+    "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
 }
