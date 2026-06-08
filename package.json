@@ -13,7 +13,7 @@
     "fix": "biome check --write ."
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/mdx": "^6.0.2",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
     "@tailwindcss/vite": "^4.3.0",
@@ -27,10 +27,11 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "@biomejs/biome": "^2.4.16",
-    "@imgly/background-removal-node": "^1.4.5",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^25.9.1",
+    "rehype-external-links": "^3.0.0",
     "satori": "^0.26.0",
+    "sharp": "^0.34.5",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
