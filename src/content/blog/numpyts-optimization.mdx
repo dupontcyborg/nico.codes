@@ -131,7 +131,7 @@ const y = np.sin(x)
 
 With WASM-owned arrays, those intermediates stay in one memory space instead of bouncing between two heaps on every step.
 
-## What the benchmarks measure
+## Benchmark results
 
 After these optimizations, numpy-ts is on average **1.11x faster than native NumPy** across **7,159 benchmarks** on an Apple M4 Max. That average is a geometric mean across operations, dtypes, and array sizes.
 
@@ -139,7 +139,7 @@ After these optimizations, numpy-ts is on average **1.11x faster than native Num
 
 The suite covers 308 benchmark specifications across 18 categories, producing 7,159 benchmark results across operations, dtypes, and sizes. NumPy benchmarks run in Python, and numpy-ts benchmarks run in Node.js, so the comparison does not depend on calling one runtime from the other.
 
-You can read the full benchmark methodology [here](https://numpyts.dev/v1.4.x/performance/methodology), and all benchmark results [here](https://numpyts.dev/v1.4.x/performance/vs-numpy). There are also separate breakdowns for [size scaling](https://numpyts.dev/v1.4.x/performance/size-scaling) and [Node/Bun/Deno runtime comparisons](https://numpyts.dev/v1.4.x/performance/deno-bun).
+You can read the full [benchmark methodology](https://numpyts.dev/v1.4.x/performance/methodology) and [all benchmark results](https://numpyts.dev/v1.4.x/performance/vs-numpy). There are also separate breakdowns for [size scaling](https://numpyts.dev/v1.4.x/performance/size-scaling) and [Node/Bun/Deno runtime comparisons](https://numpyts.dev/v1.4.x/performance/deno-bun).
 
 numpy-ts is not faster than NumPy in every category. NumPy still wins in several areas, including some math functions, trigonometry, indexing-heavy workloads, sorting, random generation, FFTs, and complex dtype operations.
 
@@ -149,7 +149,7 @@ Moving array data into WASM memory fixed the biggest performance bottleneck, but
 
 That is the general pattern with this kind of work. The closer you get to native performance, the more you inherit native-style problems.
 
-**Tradeoff #1: memory management**
+### Tradeoff #1: memory management
 
 When array data lives in JavaScript typed arrays, the garbage collector manages memory. You can create arrays, drop references, and trust the runtime to eventually clean up.
 
@@ -161,15 +161,15 @@ numpy-ts also supports deterministic cleanup through JavaScript’s `using` patt
 
 Under the hood, numpy-ts still has to track ownership carefully so that views, slices, and derived arrays do not free memory too early or leak it forever.
 
-**Tradeoff #2: dtype support**
+### Tradeoff #2: dtype support
 
 NumPy has decades of machinery around dtypes. WASM does not map perfectly onto that world. `float16` is a good example: there is no universally available native WebAssembly `f16` path that numpy-ts can rely on across runtimes today, so `float16` values have to be represented as `uint16` where possible and promoted to `float32` for computation when necessary.
 
 It's workable, but it is not free.
 
-**Tradeoff #3: packaging**
+### Tradeoff #3: packaging
 
-numpy-ts needs to work in Node, Bun, Deno, browsers, test runners, bundlers, CDNs, and tree-shaken npm installs. Those environments do not all agree on how `.wasm` files should be loaded. Some expect asset URLs, some inline them some require async initialization, some behave differently under ESM, etc.
+numpy-ts needs to work in Node, Bun, Deno, browsers, test runners, bundlers, CDNs, and tree-shaken npm installs. Those environments do not all agree on how `.wasm` files should be loaded. Some expect asset URLs, some inline them, some require async initialization, some behave differently under ESM, etc.
 
 For numpy-ts, the practical solution was to compile each Zig kernel to WASM, encode the module as base64, and inline it into a [generated TypeScript file](https://github.com/dupontcyborg/numpy-ts/blob/v1.4.0/src/common/wasm/bins/alloc.wasm.ts). That is not the prettiest artifact, but it gives users a normal ESM module, avoids separate asset loading, keeps kernels self-contained, and lets bundlers tree-shake unused kernels, all transparently.
 
