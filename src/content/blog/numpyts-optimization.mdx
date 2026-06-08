@@ -8,6 +8,7 @@ draft: false
 ---
 
 import { Image } from "astro:assets";
+import Flow from "../../components/Flow.astro";
 import chart1 from "../../assets/blog/numpyts-optimization/perf-v1.0.png";
 import chart2 from "../../assets/blog/numpyts-optimization/perf-v1.1.png";
 import chart3 from "../../assets/blog/numpyts-optimization/perf-v1.3.png";
@@ -73,13 +74,15 @@ The real problem was the copy.
 
 In my initial approach, the ndarray data lived in JavaScript-owned `TypedArray` objects. When numpy-ts needed to run a WASM kernel, it had to copy data into WASM linear memory, run the kernel, then copy the result back out into JavaScript memory.
 
-```text
-JS Float64Array
-↓ copy into WASM linear memory
-WASM kernel runs
-↓ copy result back to JS
-JS Float64Array result
-```
+<Flow
+  steps={[
+    { node: "JS Float64Array" },
+    { edge: "copy into WASM linear memory", accent: "copy" },
+    { node: "WASM kernel runs" },
+    { edge: "copy result back to JS", accent: "copy" },
+    { node: "JS Float64Array result" },
+  ]}
+/>
 
 For an isolated operation, this was tolerable. For NumPy-style code, it was disastrous.
 
@@ -93,17 +96,19 @@ Instead of storing ndarray data in JavaScript and copying it into WASM for compu
 
 JavaScript still owns the high-level object model: shapes, strides, dtype metadata, method chaining, API ergonomics, and TypeScript types. But the bytes backing an array live in WASM memory.
 
-```text
-NDArray wrapper in JS
-↓
-WASM linear memory allocation
-↓
-WASM kernel receives pointers, shape, strides, dtype
-↓
-result allocation also lives in WASM memory
-↓
-JS receives lightweight metadata wrapper
-```
+<Flow
+  steps={[
+    { node: "NDArray wrapper in JS" },
+    { edge: "allocate" },
+    { node: "WASM linear memory allocation", accent: "keep" },
+    {},
+    { node: "WASM kernel receives pointers, shape, strides, dtype" },
+    {},
+    { node: "result allocation also lives in WASM memory", accent: "keep" },
+    {},
+    { node: "JS receives lightweight metadata wrapper" },
+  ]}
+/>
 
 
 With this approach, a kernel no longer needs to copy inputs into WASM memory, because the inputs are already there. It no longer needs to copy outputs back into JavaScript memory, because outputs can also be allocated in WASM memory. JavaScript can pass pointers and metadata instead of moving entire buffers around.
@@ -150,7 +155,7 @@ Moving array data into WASM memory fixed the biggest performance bottleneck, but
 
 That is the general pattern with this kind of work. The closer you get to native performance, the more you inherit native-style problems.
 
-**Tradeoff #1: memory management**.
+**Tradeoff #1: memory management**
 
 When array data lives in JavaScript typed arrays, JavaScript garbage collection handles the memory. You can create arrays, drop references, and trust the runtime to eventually clean up.
 
@@ -162,13 +167,13 @@ So numpy-ts also supports deterministic cleanup through JavaScript’s `using` p
 
 Under the hood, numpy-ts still has to track ownership carefully so that views, slices, and derived arrays do not free memory too early or leak it forever.
 
-**Tradeoff #2: dtype support**.
+**Tradeoff #2: dtype support**
 
 NumPy has decades of machinery around dtypes. WASM does not map perfectly onto that world. `float16` is a good example: there is no universally available native WebAssembly `f16` path that numpy-ts can rely on across runtimes today, so `float16` values have to be represented as `uint16` where possible and promoted to `float32` for computation when necessary.
 
 That is workable, but it is not free.
 
-**Tradeoff #3: packaging**.
+**Tradeoff #3: packaging**
 
 “Ship WASM” sounds simple until you try to make it work everywhere JavaScript runs.
 

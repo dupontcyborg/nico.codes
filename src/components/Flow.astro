@@ -1,0 +1,60 @@
+---
+// A vertical data-flow diagram for blog posts. Replaces ASCII ```text diagrams.
+// Each item is either a `node` (a state/box) or an `edge` (a labeled arrow between nodes).
+// `accent` tints an item: "copy" (red, the cost we want to highlight) or "keep" (blue, no-copy/positive).
+type Item =
+  | { node: string; accent?: "copy" | "keep" }
+  | { edge?: string; accent?: "copy" | "keep" };
+
+interface Props {
+  steps: Item[];
+  caption?: string;
+}
+
+const { steps, caption } = Astro.props;
+
+const accentText = {
+  copy: "text-[#e06c75]",
+  keep: "text-[#5a9fd4]",
+} as const;
+const accentNode = {
+  copy: "border-[#d9534f]/40 bg-[#d9534f]/[0.08] text-[#e8a39d]",
+  keep: "border-[#4a86b8]/40 bg-[#4a86b8]/[0.08] text-[#9fc4e0]",
+} as const;
+---
+
+<figure class="my-7 not-prose">
+  <div class="flex flex-col items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-6 py-6 font-mono text-[13px]">
+    {
+      steps.map((item) =>
+        "node" in item ? (
+          <div
+            class:list={[
+              "w-full max-w-xs text-center rounded-md border px-4 py-2 leading-snug",
+              item.accent
+                ? accentNode[item.accent]
+                : "border-white/[0.1] bg-white/[0.03] text-white/75",
+            ]}
+          >
+            {item.node}
+          </div>
+        ) : (
+          <div
+            class:list={[
+              "flex flex-col items-center leading-tight",
+              item.accent ? accentText[item.accent] : "text-white/35",
+            ]}
+          >
+            <span aria-hidden="true" class="text-base">↓</span>
+            {item.edge && <span class="text-[11px] mt-0.5">{item.edge}</span>}
+          </div>
+        ),
+      )
+    }
+  </div>
+  {
+    caption && (
+      <figcaption class="mt-2 text-center text-[12px] text-white/35">{caption}</figcaption>
+    )
+  }
+</figure>
