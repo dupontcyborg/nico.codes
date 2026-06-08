@@ -8,6 +8,10 @@ draft: false
 ---
 
 import { Image } from "astro:assets";
+import chart1 from "../../assets/blog/numpyts-optimization/perf-v1.0.png";
+import chart2 from "../../assets/blog/numpyts-optimization/perf-v1.1.png";
+import chart3 from "../../assets/blog/numpyts-optimization/perf-v1.3.png";
+import chart4 from "../../assets/blog/numpyts-optimization/perf-by-category.png";
 
 When I first started building [numpy-ts](https://github.com/dupontcyborg/numpy-ts), everybody said there was no way it could reach performance parity with NumPy’s native implementation and its decades of optimization.
 
@@ -29,10 +33,7 @@ It was also painfully slow.
 
 At that stage, numpy-ts was roughly **15x slower than native NumPy** across the benchmark suite.
 
-{/* CHART 1 — "Pure TypeScript vs NumPy"
-     Framing: NumPy baseline at 1.0x runtime, pure TypeScript around 15.0x runtime.
-     TODO: import chart1 from "../../assets/blog/<filename>"; then:
-     <Image src={chart1} alt="Pure TypeScript runs ~15x slower than native NumPy" /> */}
+<Image src={chart1} alt="Relative performance vs NumPy: NumPy at 1.0x, pure TypeScript numpy-ts 1.0 at 0.07x — roughly 15x slower." />
 
 This was not because JavaScript engines are bad. V8, JavaScriptCore, and other modern runtimes are extraordinary pieces of engineering. Their optimizing JIT compilers are basically wizardry. But numerical computing is a particularly brutal workload.
 
@@ -58,10 +59,7 @@ I chose Zig for this because it fit the shape of the problem well. Zig can produ
 
 This helped a lot. The performance gap dropped from about **15x slower than NumPy** to roughly **2x slower**.
 
-{/* CHART 2 — "Pure TypeScript → WASM kernels"
-     Framing: three bars — NumPy baseline, pure TypeScript, WASM kernels with copies.
-     TODO: import chart2 from "../../assets/blog/<filename>"; then:
-     <Image src={chart2} alt="WASM kernels narrow the gap from ~15x to ~2x slower than NumPy" /> */}
+<Image src={chart2} alt="Relative performance vs NumPy: NumPy at 1.0x, numpy-ts 1.0 at 0.07x, and copy-based WASM kernels (numpy-ts 1.1) at 0.48x — roughly 2x slower." />
 
 At this point, many of the expensive loops were already running in compiled WASM. The kernels themselves were fast, but 50% native speed appeared to be a ceiling. Why was that?
 
@@ -132,19 +130,13 @@ With WASM-owned arrays, those intermediates stay in the same memory space instea
 
 That was the architectural turning point. The same benchmark suite that had numpy-ts around 15x slower in pure TypeScript, and around 2x slower with copy-based WASM, finally moved to native NumPy performance.
 
-{/* CHART 3 — "Pure TypeScript → WASM kernels → WASM no copy"
-     Framing: four bars — NumPy baseline, pure TypeScript, WASM kernels with copies, WASM kernels with no copies.
-     TODO: import chart3 from "../../assets/blog/<filename>"; then:
-     <Image src={chart3} alt="No-copy WASM reaches native NumPy performance" /> */}
+<Image src={chart3} alt="Relative performance vs NumPy: NumPy at 1.0x, numpy-ts 1.0 at 0.07x, copy-based WASM 1.1 at 0.48x, and no-copy WASM 1.3 at 1.11x — surpassing native NumPy." />
 
 ## What the benchmark measures
 
 After these optimizations, numpy-ts is on average **1.11x faster than native NumPy** across **7,159 benchmarks** on an Apple M4 Max. That average is a geometric mean across operations, dtypes, and array sizes.
 
-{/* CHART 4 — per-category breakdown
-     Framing: numpy-ts vs NumPy speedup per benchmark category (18 categories).
-     TODO: import chart4 from "../../assets/blog/<filename>"; then:
-     <Image src={chart4} alt="Per-category speedup of numpy-ts vs NumPy" /> */}
+<Image src={chart4} alt="Speedup vs NumPy by benchmark category: numpy-ts is faster on gradient (4.20x), sets, io, polynomials, logic, creation, statistics, linalg, manipulation, arithmetic, and at parity on reductions (1.00x); NumPy is faster on fft, random, sorting, indexing, bitwise, math, and trig (down to 0.59x)." />
 
 The suite covers 308 benchmark specifications across 18 categories, producing 7,159 benchmark results across operations, dtypes, and sizes. NumPy benchmarks run in Python, and numpy-ts benchmarks run in Node.js, so the comparison does not depend on calling one runtime from the other.
 
