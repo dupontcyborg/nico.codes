@@ -63,12 +63,7 @@ export default defineConfig({
   site: "https://nico.codes",
   integrations: [mdx(), sitemap(), preloadStaticImports()],
   markdown: {
-    rehypePlugins: [
-      [
-        rehypeExternalLinks,
-        { target: "_blank", rel: ["noopener", "noreferrer"] },
-      ],
-    ],
+    rehypePlugins: [[rehypeExternalLinks, { target: "_blank", rel: ["noopener", "noreferrer"] }]],
   },
   vite: {
     plugins: [tailwindcss()],
