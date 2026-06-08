@@ -105,14 +105,14 @@ html[data-cursor="active"] textarea {
 }
 
 /* Links */
-.post-body a {
+.post-body a:not(.repo-card) {
   color: rgb(245, 247, 250);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-color: rgba(245, 247, 250, 0.25);
   transition: text-decoration-color 150ms;
 }
-.post-body a:hover {
+.post-body a:not(.repo-card):hover {
   text-decoration-color: rgba(245, 247, 250, 0.6);
 }
 
