@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 # Cancel superseded runs on the same branch / PR to keep CI minutes down.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
