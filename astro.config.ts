@@ -5,6 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
+import rehypeExternalLinks from "rehype-external-links";
 
 // Walk every emitted entry script, follow its static imports one level deep,
 // and inject <link rel="modulepreload"> tags for them. Eliminates the
@@ -61,6 +62,14 @@ function preloadStaticImports(): AstroIntegration {
 export default defineConfig({
   site: "https://nico.codes",
   integrations: [mdx(), sitemap(), preloadStaticImports()],
+  markdown: {
+    rehypePlugins: [
+      [
+        rehypeExternalLinks,
+        { target: "_blank", rel: ["noopener", "noreferrer"] },
+      ],
+    ],
+  },
   vite: {
     plugins: [tailwindcss()],
     server: {

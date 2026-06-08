@@ -29,6 +29,7 @@
     "@biomejs/biome": "^2.4.16",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^25.9.1",
+    "rehype-external-links": "^3.0.0",
     "satori": "^0.26.0",
     "sharp": "^0.34.5",
     "tsx": "^4.22.3",

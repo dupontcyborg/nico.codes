@@ -1,6 +1,6 @@
 ---
 title: "Making numpy-ts as fast as native"
-description: "How numpy-ts went from 15x slower than NumPy to performance parity."
+description: "How numpy-ts went from 15x slower than NumPy to performance parity"
 pubDate: 2026-06-08
 tags: ["engineering", "webassembly", "typescript", "numpy-ts"]
 pinned: false
@@ -20,7 +20,7 @@ I set out to prove those naysayers wrong.
 
 Turns out, they were right.
 
-Pure JavaScript/TypeScript was never going to match NumPy on raw numerical performance. Not for the operations where NumPy is really not “Python” anymore, but C, Fortran, BLAS, LAPACK, pocketfft, and a very mature memory model, all hiding behind a Python API.
+Pure JavaScript/TypeScript was never going to match NumPy on raw numerical performance. Not for the operations where NumPy is really not “Python” anymore, but C, BLAS/LAPACK, pocketfft, and a very mature memory model, all hiding behind a Python API.
 
 The path to making numpy-ts competitive with native NumPy was not making JS magically faster. It wasn’t even “use WASM,” at least not on its own. It was changing who owned the bytes.
 
@@ -28,7 +28,7 @@ The path to making numpy-ts competitive with native NumPy was not making JS magi
 
 The first major goal for numpy-ts was compatibility. I wanted something that felt like NumPy, worked naturally in TypeScript, and sported the same API surface as Python NumPy.
 
-After several months, numpy-ts reached broad functional parity, with API coverage and strong cross-validation test suites. You could write NumPy-style code in TypeScript and get the right answers.
+After several months, numpy-ts reached broad functional parity, with comprehensive API coverage and strong cross-validation test suites. You could write NumPy-style code in TypeScript and get the right answers.
 
 It was also painfully slow. 
 
@@ -36,11 +36,11 @@ At that stage, numpy-ts was roughly **15x slower than native NumPy** across the 
 
 <Image src={chart1} alt="Relative performance vs NumPy: NumPy at 1.0x, pure TypeScript numpy-ts 1.0 at 0.07x — roughly 15x slower." />
 
-This was not because JavaScript engines are bad. V8, JavaScriptCore, and other modern runtimes are extraordinary pieces of engineering. Their optimizing JIT compilers are basically wizardry. But numerical computing is a particularly brutal workload.
+This was not because JavaScript engines are bad. V8, JavaScriptCore, and other modern runtimes are extraordinary pieces of engineering, and they handle exactly this shape of work well. A tight, monomorphic loop over a contiguous `Float64Array` compiles to something pretty close to the equivalent scalar loop in C.
 
-A lot of NumPy’s speed comes from operating over large, contiguous typed buffers with predictable memory access patterns, minimal dynamic dispatch, specialized kernels, and decades of low-level optimization. 
+The problem is that scalar C is not the bar. NumPy isn't running scalar loops. Its hot paths are SIMD-vectorized, dispatch into mature kernels like BLAS, LAPACK, and pocketfft, and in places parallelize across cores. Portable JavaScript can't express most of that: no explicit SIMD, no native BLAS, and every number is a `float64`. So even a perfectly JIT-compiled JS loop ends up competing one lane at a time against kernels doing four, eight, or sixteen.
 
-For small operations, JavaScript could be surprisingly competitive. For large arrays and compute-heavy kernels, it could not keep up.
+For small operations, where that vectorization advantage barely matters and fixed overheads dominate, JavaScript could be surprisingly competitive. For large arrays and compute-heavy kernels, where NumPy’s vectorized, specialized machinery is doing real work, it could not keep up.
 
 The obvious next step was WebAssembly.
 
@@ -52,11 +52,11 @@ That was directionally right, but there was an important constraint. I did not w
 
 * tree-shakeable (small when you only import a few functions)
 * ergonomic from JavaScript
-* usable in Node, Bun, Deno, and browsers
+* portable across Node, Bun, Deno, and browsers
 
 So instead of rewriting the entire library in native code, I opted to move performance-critical kernels into small, self-contained WASM modules.
 
-I chose Zig for this because it fit the shape of the problem well. Zig can produce small WASM artifacts, has no mandatory runtime, gives direct control over memory, and is pleasant for writing the kind of low-level loops numerical kernels need.
+I found Zig to be a good fit for this problem. Zig can produce small WASM artifacts, has no mandatory runtime, gives direct control over memory, and is pleasant for writing the kind of low-level loops numerical kernels need.
 
 This helped a lot. The performance gap dropped from about **15x slower than NumPy** to roughly **2x slower**.
 
@@ -78,7 +78,7 @@ In my initial approach, the ndarray data lived in JavaScript-owned `TypedArray` 
   steps={[
     { node: "JS Float64Array" },
     { edge: "copy into WASM linear memory", accent: "copy" },
-    { node: "WASM kernel runs" },
+    { node: "WASM kernel" },
     { edge: "copy result back to JS", accent: "copy" },
     { node: "JS Float64Array result" },
   ]}
@@ -86,11 +86,9 @@ In my initial approach, the ndarray data lived in JavaScript-owned `TypedArray` 
 
 For an isolated operation, this was tolerable. For NumPy-style code, it was disastrous.
 
-Numerical programs are full of chained operations. Add, multiply, reshape, reduce, broadcast, slice, take, compare, accumulate. If every operation pays a copy-in/copy-out tax, then the actual computation is no longer the only thing being benchmarked. In many cases, it is not even the dominant cost.
+Numerical programs are full of chained operations. Add, multiply, reshape, reduce, broadcast, slice, take, compare, accumulate. If every operation pays a copy-in/copy-out tax, then the actual computation is no longer the only thing being benchmarked. In many cases, it isn't even the dominant cost.
 
 ## The missing element: no-copy calls
-
-The breakthrough was to invert ownership.
 
 Instead of storing ndarray data in JavaScript and copying it into WASM for computation, what if we moved storage into WASM linear memory?
 
@@ -117,11 +115,13 @@ This sounds obvious in hindsight, but it is a much deeper architectural change t
 
 Once WASM owns the array data, you need a memory model. You need allocation and deallocation. You need to think about fragmentation, lifetimes, views, slices, and what happens when JavaScript objects are garbage collected but their underlying WASM allocations are not.
 
-For numpy-ts, that meant building a custom allocator for WASM linear memory. The allocator uses a segregated free list, which is a good fit for ndarray workloads because arrays tend to allocate and free blocks across a range of common sizes. It avoids turning every array allocation into a slow path and makes it practical for many arrays to live entirely inside WASM memory.
+For numpy-ts, that meant building a [custom allocator](https://github.com/dupontcyborg/numpy-ts/blob/v1.4.0/src/common/wasm/zig/alloc.zig) for WASM linear memory. The allocator uses a segregated free list, which is a good fit for ndarray workloads because arrays tend to allocate and free blocks across a range of common sizes. It avoids turning every array allocation into a slow path and makes it practical for many arrays to live entirely inside WASM memory.
 
-The result was that numpy-ts stopped paying a constant copy tax on every native call.
+That was the architectural turning point. On the same benchmark suite, numpy-ts finally reached native NumPy performance.
 
-That matters most in ordinary NumPy-style code, where operations are often chained:
+<Image src={chart3} alt="Relative performance vs NumPy: NumPy at 1.0x, numpy-ts 1.0 at 0.07x, copy-based WASM 1.1 at 0.48x, and no-copy WASM 1.3 at 1.11x — surpassing native NumPy." />
+
+The reason it pulled ahead is that numpy-ts no longer pays a copy tax on every WASM call. That matters most in ordinary NumPy-style code, where operations chain:
 
 ```ts
 const y = np.sin(x)
@@ -129,15 +129,9 @@ const y = np.sin(x)
 	.multiply(0.5)
 ```
 
-A naive eager implementation creates several intermediate arrays. If each intermediate has to cross the JS/WASM boundary by copying buffers, the cost compounds quickly. Even when each individual kernel is fast, the overall expression pays for data movement at every step.
+With WASM-owned arrays, those intermediates stay in one memory space instead of bouncing between two heaps on every step.
 
-With WASM-owned arrays, those intermediates stay in the same memory space instead of bouncing between two heaps.
-
-That was the architectural turning point. The same benchmark suite that had numpy-ts around 15x slower in pure TypeScript, and around 2x slower with copy-based WASM, finally moved to native NumPy performance.
-
-<Image src={chart3} alt="Relative performance vs NumPy: NumPy at 1.0x, numpy-ts 1.0 at 0.07x, copy-based WASM 1.1 at 0.48x, and no-copy WASM 1.3 at 1.11x — surpassing native NumPy." />
-
-## What the benchmark measures
+## What the benchmarks measure
 
 After these optimizations, numpy-ts is on average **1.11x faster than native NumPy** across **7,159 benchmarks** on an Apple M4 Max. That average is a geometric mean across operations, dtypes, and array sizes.
 
@@ -157,13 +151,13 @@ That is the general pattern with this kind of work. The closer you get to native
 
 **Tradeoff #1: memory management**
 
-When array data lives in JavaScript typed arrays, JavaScript garbage collection handles the memory. You can create arrays, drop references, and trust the runtime to eventually clean up.
+When array data lives in JavaScript typed arrays, the garbage collector manages memory. You can create arrays, drop references, and trust the runtime to eventually clean up.
 
 When array data lives in WASM linear memory, that is no longer enough. A JavaScript `NDArray` object may be garbage collected, but the WASM allocation it points to does not automatically disappear unless the library arranges for that to happen.
 
-`FinalizationRegistry` helps with automatic cleanup, but it is intentionally nondeterministic. That is fine for casual use, but not enough for long-running numerical workloads where memory pressure needs to be predictable.
+[`FinalizationRegistry`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry) helps with automatic cleanup, but it is intentionally nondeterministic. That is fine for casual use, but not enough for long-running numerical workloads where memory pressure needs to be predictable.
 
-So numpy-ts also supports deterministic cleanup through JavaScript’s `using` pattern via `Symbol.dispose`. Casual users can mostly ignore memory management; serious users can release temporary arrays explicitly when they need to.
+numpy-ts also supports deterministic cleanup through JavaScript’s `using` pattern via [`Symbol.dispose`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/dispose). Casual users can mostly ignore memory management; serious users can release temporary arrays explicitly when they need to.
 
 Under the hood, numpy-ts still has to track ownership carefully so that views, slices, and derived arrays do not free memory too early or leak it forever.
 
@@ -171,15 +165,13 @@ Under the hood, numpy-ts still has to track ownership carefully so that views, s
 
 NumPy has decades of machinery around dtypes. WASM does not map perfectly onto that world. `float16` is a good example: there is no universally available native WebAssembly `f16` path that numpy-ts can rely on across runtimes today, so `float16` values have to be represented as `uint16` where possible and promoted to `float32` for computation when necessary.
 
-That is workable, but it is not free.
+It's workable, but it is not free.
 
 **Tradeoff #3: packaging**
 
-“Ship WASM” sounds simple until you try to make it work everywhere JavaScript runs.
-
 numpy-ts needs to work in Node, Bun, Deno, browsers, test runners, bundlers, CDNs, and tree-shaken npm installs. Those environments do not all agree on how `.wasm` files should be loaded. Some expect asset URLs, some inline them some require async initialization, some behave differently under ESM, etc.
 
-For numpy-ts, the practical solution was to compile each Zig kernel to WASM, encode the module as base64, and inline it into a generated TypeScript file. That is not the prettiest artifact, but it gives users a normal ESM module, avoids separate asset loading, keeps kernels self-contained, and lets bundlers tree-shake unused kernels, all transparently.
+For numpy-ts, the practical solution was to compile each Zig kernel to WASM, encode the module as base64, and inline it into a [generated TypeScript file](https://github.com/dupontcyborg/numpy-ts/blob/v1.4.0/src/common/wasm/bins/alloc.wasm.ts). That is not the prettiest artifact, but it gives users a normal ESM module, avoids separate asset loading, keeps kernels self-contained, and lets bundlers tree-shake unused kernels, all transparently.
 
 ## What I learned
 
