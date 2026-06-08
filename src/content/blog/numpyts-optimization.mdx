@@ -9,6 +9,7 @@ draft: false
 
 import { Image } from "astro:assets";
 import Flow from "../../components/Flow.astro";
+import RepoCard from "../../components/RepoCard.astro";
 import chart1 from "../../assets/blog/numpyts-optimization/perf-v1.0.png";
 import chart2 from "../../assets/blog/numpyts-optimization/perf-v1.1.png";
 import chart3 from "../../assets/blog/numpyts-optimization/perf-v1.3.png";
@@ -186,3 +187,8 @@ The skeptics were right about the original design. Pure TypeScript was not going
 The part I missed was that “native performance” was less about where the arithmetic ran, and more about where the data lived.
 
 Once that changed, the performance work started to look much less impossible.
+
+<RepoCard
+  repo="dupontcyborg/numpy-ts"
+  description="Fast, complete NumPy for TypeScript & JavaScript"
+/>

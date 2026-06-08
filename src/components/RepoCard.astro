@@ -1,0 +1,93 @@
+---
+// A GitHub repo call-to-action card for the bottom of posts.
+// Star count is fetched client-side (always live), cached in localStorage for an
+// hour to avoid the flash-of-empty on repeat visits and ease GitHub's rate limit.
+// If the fetch fails (e.g. rate-limited), the star pill stays hidden and the card
+// degrades to a plain repo link.
+interface Props {
+  repo: string; // "owner/name"
+  name?: string; // display name (defaults to the repo's name segment)
+  description: string;
+}
+
+const { repo, name, description } = Astro.props;
+const displayName = name ?? repo.split("/")[1];
+---
+
+<a
+  href={`https://github.com/${repo}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  data-repo={repo}
+  class="repo-card group not-prose my-8 flex items-center gap-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 no-underline transition-colors duration-150 hover:bg-white/[0.04]"
+>
+  <svg viewBox="0 0 24 24" fill="currentColor" class="h-7 w-7 shrink-0 text-white/40 transition-colors group-hover:text-white/70" aria-hidden="true">
+    <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.16c-3.2.7-3.87-1.37-3.87-1.37-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.15 1.18.91-.26 1.89-.39 2.86-.39.97 0 1.95.13 2.86.39 2.18-1.49 3.14-1.18 3.14-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z" />
+  </svg>
+
+  <div class="min-w-0 flex-1">
+    <div class="text-[15px] font-medium text-white/85 transition-colors group-hover:text-white">{displayName}</div>
+    <div class="truncate text-sm text-white/45">{description}</div>
+  </div>
+
+  <span
+    data-stars
+    hidden
+    class="flex shrink-0 items-center gap-1.5 rounded-md border border-white/[0.08] px-2.5 py-1 text-[13px] tabular-nums text-white/60"
+  >
+    <svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5 text-amber-400/80" aria-hidden="true">
+      <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.9l-5.8 3.05 1.1-6.47L2.6 9.9l6.5-.95L12 2.5z" />
+    </svg>
+    <span data-star-count></span>
+  </span>
+</a>
+
+<script>
+  type Cached = { stars: number; at: number };
+  const TTL = 60 * 60 * 1000; // 1 hour
+
+  function hydrate() {
+    document.querySelectorAll<HTMLAnchorElement>(".repo-card[data-repo]").forEach((card) => {
+      const repo = card.dataset.repo!;
+      const pill = card.querySelector<HTMLElement>("[data-stars]");
+      const count = card.querySelector<HTMLElement>("[data-star-count]");
+      if (!pill || !count) return;
+
+      const show = (stars: number) => {
+        count.textContent = stars.toLocaleString();
+        pill.hidden = false;
+      };
+
+      const key = `repo-stars:${repo}`;
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const cached = JSON.parse(raw) as Cached;
+          if (typeof cached.stars === "number") show(cached.stars); // paint instantly
+          if (Date.now() - cached.at < TTL) return; // still fresh, skip the network
+        }
+      } catch {
+        /* ignore malformed cache */
+      }
+
+      fetch(`https://api.github.com/repos/${repo}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((data) => {
+          const stars = data?.stargazers_count;
+          if (typeof stars !== "number") return;
+          show(stars);
+          try {
+            localStorage.setItem(key, JSON.stringify({ stars, at: Date.now() }));
+          } catch {
+            /* storage full / disabled — fine */
+          }
+        })
+        .catch(() => {
+          /* rate-limited or offline — leave the pill hidden, card still links out */
+        });
+    });
+  }
+
+  hydrate();
+  document.addEventListener("astro:after-swap", hydrate);
+</script>
