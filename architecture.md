@@ -110,7 +110,7 @@ Two sections rendered from the same content collection, filtered by `pinned`:
 Cloudflare Pages, connected to GitHub. Every push to `main` triggers a build.
 
 ```
-Build command:  npm run build
+Build command:  pnpm run build
 Output dir:     dist/
 ```
 
@@ -118,7 +118,7 @@ Output dir:     dist/
 {
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run og && astro build",
+    "build": "pnpm og && astro build",
     "og": "tsx scripts/generate-og.ts",
     "preview": "astro preview"
   }
