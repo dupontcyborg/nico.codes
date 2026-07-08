@@ -2,9 +2,10 @@
   "name": "nico.codes",
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.8.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run og && astro build",
+    "build": "pnpm og && astro build",
     "og": "tsx scripts/generate-og.ts",
     "preview": "astro preview",
     "check": "astro check",
@@ -20,9 +21,6 @@
     "astro": "^6.4.8",
     "numpy-ts": "^1.5.0",
     "tailwindcss": "^4.3.0"
-  },
-  "overrides": {
-    "vite": "^7"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",

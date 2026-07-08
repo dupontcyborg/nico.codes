@@ -1,0 +1,6 @@
+overrides:
+  vite: ^7
+
+allowBuilds:
+  esbuild: true
+  sharp: true
