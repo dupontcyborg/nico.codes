@@ -74,6 +74,13 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
       };
     </script>
     <script defer data-domain="nico.codes" src="https://d1w0psmo3bkh8z.cloudfront.net/js/script.js" is:inline></script>
+    {/* Easter egg :) */}
+    <script is:inline>
+      console.log(
+        "%c Hello! Why are you looking at my console? :0 ",
+        "color:#f5f7fa;background:#050607;font:600 13px/2 ui-monospace,SFMono-Regular,Menlo,monospace"
+      );
+    </script>
   </head>
   <body class="bg-[rgb(5,6,7)] text-[rgb(245,247,250)] antialiased">
     <Cursor />
