@@ -59,6 +59,17 @@ function preloadStaticImports(): AstroIntegration {
   };
 }
 
+// Astro hardcodes the client target to "esnext", shipping raw `using` Safari can't parse.
+// ES-year targets only — browser targets like "safari16" skip the transform.
+function clientBuildTarget(target: string) {
+  return {
+    name: "client-build-target",
+    configEnvironment(name: string) {
+      if (name === "client") return { build: { target } };
+    },
+  };
+}
+
 export default defineConfig({
   site: "https://nico.codes",
   integrations: [mdx(), sitemap(), preloadStaticImports()],
@@ -68,7 +79,7 @@ export default defineConfig({
     ],
   },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), clientBuildTarget("es2022")],
     server: {
       hmr: {
         protocol: "ws",
