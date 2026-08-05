@@ -13,3 +13,10 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # TS 7 dropped the plugin API that Astro tooling depends on:
+      # @astrojs/check still peer-caps at typescript ^6.
+      # Remove once @astrojs/check widens its typescript peer range.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
