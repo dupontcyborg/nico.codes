@@ -1,0 +1,83 @@
+---
+// JSON-LD structured data. 
+//
+// Person and WebSite are emitted on every page and referenced by @id elsewhere,
+// so each page's graph resolves standalone.
+interface Props {
+  type: "website" | "profile" | "article";
+  title: string;
+  description: string;
+  canonicalUrl: string;
+  image: string;
+  pubDate?: Date;
+  updatedDate?: Date;
+}
+
+const { type, title, description, canonicalUrl, image, pubDate, updatedDate } = Astro.props;
+
+const site = (Astro.site ?? new URL("https://nico.codes")).toString();
+const PERSON_ID = `${site}#nico`;
+const WEBSITE_ID = `${site}#website`;
+
+const person = {
+  "@type": "Person",
+  "@id": PERSON_ID,
+  name: "Nico Dupont",
+  alternateName: "Nicolas Dupont",
+  url: site,
+  image: new URL("/portraits/glasses-color.webp", site).toString(),
+  jobTitle: "Software Engineer",
+  worksFor: { "@type": "Organization", name: "Cyborg", url: "https://cyborg.co" },
+  homeLocation: { "@type": "Place", name: "New York, NY" },
+  knowsAbout: ["Performance optimization", "Applied cryptography", "TypeScript", "C++"],
+  sameAs: ["https://github.com/dupontcyborg", "https://www.linkedin.com/in/cyborgnico"],
+};
+
+const website = {
+  "@type": "WebSite",
+  "@id": WEBSITE_ID,
+  url: site,
+  name: "nico.codes",
+  inLanguage: "en",
+  publisher: { "@id": PERSON_ID },
+};
+
+const nodes: Record<string, unknown>[] = [person, website];
+
+if (type === "profile") {
+  nodes.push({
+    "@type": "ProfilePage",
+    "@id": canonicalUrl,
+    url: canonicalUrl,
+    name: title,
+    description,
+    inLanguage: "en",
+    isPartOf: { "@id": WEBSITE_ID },
+    mainEntity: { "@id": PERSON_ID },
+  });
+} else if (type === "article" && pubDate) {
+  nodes.push({
+    "@type": "BlogPosting",
+    "@id": `${canonicalUrl}#post`,
+    headline: title,
+    description,
+    image,
+    url: canonicalUrl,
+    inLanguage: "en",
+    datePublished: pubDate.toISOString(),
+    dateModified: (updatedDate ?? pubDate).toISOString(),
+    author: { "@id": PERSON_ID },
+    publisher: { "@id": PERSON_ID },
+    isPartOf: { "@id": WEBSITE_ID },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+  });
+}
+
+// Escape `<` so authored text can never break out of the script element.
+const json = JSON.stringify({ "@context": "https://schema.org", "@graph": nodes }).replace(
+  /</g,
+  "\\u003c",
+);
+---
+
+<script type="application/ld+json" is:inline set:html={json} />
