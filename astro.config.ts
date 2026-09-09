@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
@@ -59,6 +60,32 @@ function preloadStaticImports(): AstroIntegration {
   };
 }
 
+// @astrojs/sitemap emits bare <loc> entries. Google only honors <lastmod> when
+// it's consistently accurate
+function postLastmods() {
+  const dir = new URL("./src/content/blog/", import.meta.url);
+  const dates = new Map<string, string>();
+
+  for (const name of readdirSync(dir)) {
+    if (!name.endsWith(".mdx")) continue;
+    const frontmatter = readFileSync(new URL(name, dir), "utf8").split(/^---$/m)[1] ?? "";
+    const raw = (
+      frontmatter.match(/^updatedDate:\s*(.+)$/m)?.[1] ??
+      frontmatter.match(/^pubDate:\s*(.+)$/m)?.[1]
+    )
+      ?.trim()
+      .replace(/^["']|["']$/g, "");
+    if (!raw) continue;
+    const date = new Date(raw);
+    if (Number.isNaN(date.valueOf())) continue;
+    dates.set(name.replace(/\.mdx$/, ""), date.toISOString());
+  }
+
+  return dates;
+}
+
+const lastmods = postLastmods();
+
 // Astro hardcodes the client target to "esnext", shipping raw `using` Safari can't parse.
 // ES-year targets only — browser targets like "safari16" skip the transform.
 function clientBuildTarget(target: string) {
@@ -72,7 +99,17 @@ function clientBuildTarget(target: string) {
 
 export default defineConfig({
   site: "https://nico.codes",
-  integrations: [mdx(), sitemap(), preloadStaticImports()],
+  integrations: [
+    mdx(),
+    sitemap({
+      serialize(item) {
+        const slug = new URL(item.url).pathname.match(/^\/notes\/([^/]+)\/?$/)?.[1];
+        const lastmod = slug ? lastmods.get(slug) : undefined;
+        return lastmod ? { ...item, lastmod } : item;
+      },
+    }),
+    preloadStaticImports(),
+  ],
   markdown: {
     rehypePlugins: [
       () => rehypeExternalLinks({ target: "_blank", rel: ["noopener", "noreferrer"] }),
