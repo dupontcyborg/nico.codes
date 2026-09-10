@@ -2,21 +2,31 @@
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import Cursor from "../components/Cursor.astro";
+import Schema from "../components/Schema.astro";
 
 interface Props {
   title: string;
   description?: string;
   ogImage?: string;
   ogType?: "website" | "article";
+  // JSON-LD shape. Defaults to ogType; "profile" is for the about page, which
+  // is the entity page Google should rank for my name.
+  schema?: "website" | "profile" | "article";
+  // Bare title for structured data, without the " — nico.codes" suffix that
+  // `title` carries for the browser tab. schema.org `headline` wants the
+  // article's own headline, not the document title.
+  schemaTitle?: string;
   pubDate?: Date;
   updatedDate?: Date;
 }
 
 const {
   title,
-  description = "nico.codes — personal site and notes",
+  description = "Nico Dupont — software engineer in New York. Notes on performance optimization, applied cryptography, and the things I build.",
   ogImage = "/social/og-default.png",
   ogType = "website",
+  schema,
+  schemaTitle,
   pubDate,
   updatedDate,
 } = Astro.props;
@@ -24,6 +34,7 @@ const {
 const siteUrl = Astro.site ?? Astro.url;
 const ogImageAbsolute = new URL(ogImage, siteUrl).toString();
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const schemaType = schema ?? ogType;
 ---
 
 <!doctype html>
@@ -47,7 +58,7 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
       <meta property="article:modified_time" content={updatedDate.toISOString()} />
     )}
     {ogType === "article" && (
-      <meta property="article:author" content="Nicolas Dupont" />
+      <meta property="article:author" content="Nico Dupont" />
     )}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
@@ -63,6 +74,15 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
       type="application/rss+xml"
       title="nico.codes"
       href="/rss.xml"
+    />
+    <Schema
+      type={schemaType}
+      title={schemaTitle ?? title}
+      description={description}
+      canonicalUrl={canonicalUrl}
+      image={ogImageAbsolute}
+      pubDate={pubDate}
+      updatedDate={updatedDate}
     />
     <ClientRouter />
     {/* Plausible analytics, proxied through the shared CloudFront distribution
