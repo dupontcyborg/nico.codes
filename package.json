@@ -23,14 +23,14 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
-    "@biomejs/biome": "^2.5.12",
+    "@astrojs/check": "^0.9.12",
+    "@biomejs/biome": "^2.6.2",
     "@resvg/resvg-js": "^2.6.2",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.5",
     "rehype-external-links": "^3.0.0",
-    "satori": "^0.33.4",
-    "sharp": "^0.35.4",
-    "tsx": "^4.23.13",
+    "satori": "^0.63.2",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   }
 }
