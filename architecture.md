@@ -6,15 +6,15 @@ Personal site and blog. Static, deployed on Cloudflare Pages, auto-deployed from
 
 ## Stack 
 
-| Layer | Choice |
-|---|---|
-| Framework | Astro 5 |
-| Content | MDX via `@astrojs/mdx` + Astro Content Collections |
-| Styling | Tailwind CSS |
-| Syntax highlighting | Shiki (Astro native) |
-| OG images | Satori (build-time) |
-| Hosting | Cloudflare Pages |
-| Source control | GitHub |
+| Layer               | Choice                                             |
+| ------------------- | -------------------------------------------------- |
+| Framework           | Astro 5                                            |
+| Content             | MDX via `@astrojs/mdx` + Astro Content Collections |
+| Styling             | Tailwind CSS                                       |
+| Syntax highlighting | Shiki (Astro native)                               |
+| OG images           | Satori (build-time)                                |
+| Hosting             | Cloudflare Pages                                   |
+| Source control      | GitHub                                             |
 
 ## Site structure
 
@@ -46,11 +46,11 @@ scripts/
 
 ## Routing
 
-| File | Route |
-|---|---|
-| `pages/index.astro` | `/` |
-| `pages/about.astro` | `/about` |
-| `pages/blog/index.astro` | `/blog` |
+| File                      | Route          |
+| ------------------------- | -------------- |
+| `pages/index.astro`       | `/`            |
+| `pages/about.astro`       | `/about`       |
+| `pages/blog/index.astro`  | `/blog`        |
 | `pages/blog/[slug].astro` | `/blog/[slug]` |
 
 ## Content model
