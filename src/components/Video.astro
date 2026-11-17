@@ -1,0 +1,22 @@
+---
+// A plain YouTube embed. youtube-nocookie avoids tracking cookies until played,
+// and loading="lazy" defers the iframe until it nears the viewport.
+interface Props {
+  id: string; // YouTube video id
+  title: string;
+}
+
+const { id, title } = Astro.props;
+---
+
+<div class="not-prose my-8 aspect-video overflow-hidden rounded-xl border border-white/[0.08] bg-black">
+  <iframe
+    src={`https://www.youtube-nocookie.com/embed/${id}?rel=0`}
+    title={title}
+    loading="lazy"
+    allow="encrypted-media; picture-in-picture; fullscreen"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+    class="h-full w-full border-0"
+  ></iframe>
+</div>

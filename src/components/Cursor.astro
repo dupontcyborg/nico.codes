@@ -65,6 +65,12 @@
 
     document.addEventListener("mouseover", (e) => {
       const target = e.target as HTMLElement | null;
+      // Cross-origin iframes (video embeds) swallow mousemove, so the custom
+      // cursor would freeze at the iframe's edge.
+      if (target?.tagName === "IFRAME") {
+        document.getElementById("cursor")?.classList.remove("visible", "hover");
+        return;
+      }
       if (target?.closest?.(interactiveSelector)) {
         document.getElementById("cursor")?.classList.add("hover");
       }

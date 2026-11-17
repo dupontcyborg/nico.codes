@@ -42,7 +42,7 @@ function formatDateLong(date: Date) {
   updatedDate={updatedDate}
 >
   <Header />
-  <main id="post-main" class="mx-auto max-w-[880px] px-8 pt-14 pb-16 grid grid-cols-1 gap-12">
+  <main id="post-main" class:list={["mx-auto max-w-[880px] px-8 pt-14 pb-16 grid grid-cols-1 gap-12", { "has-toc": toc }]}>
     <article>
       <div class="text-xs text-white/30 font-mono">
         {formatDate(pubDate)}
@@ -79,7 +79,7 @@ function formatDateLong(date: Date) {
 
   <style>
     @media (min-width: 960px) {
-      #post-main {
+      #post-main.has-toc {
         grid-template-columns: 1fr 160px;
       }
       #post-outline {
